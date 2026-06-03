@@ -1386,11 +1386,19 @@ impl SoroSusuTrait for SoroSusu {
             env.storage().instance().set(&defaulted_key, &defaulted_members);
         }
 
-        // Auto-slash collateral if staked
+        // Auto-slash collateral if staked — inline to avoid double require_auth
+        // (caller auth was already satisfied above; calling Self::slash_collateral
+        // would call caller.require_auth() again, raising Error(Auth, ExistingValue))
         let collateral_key = DataKey::CollateralVault(member.clone(), circle_id);
-        if let Some(_collateral) = env.storage().instance().get::<DataKey, CollateralInfo>(&collateral_key) {
-            // Reuse slash_collateral logic
-            Self::slash_collateral(env, caller, circle_id, member);
+        if let Some(mut collateral_info) = env.storage().instance().get::<DataKey, CollateralInfo>(&collateral_key) {
+            if collateral_info.status == CollateralStatus::Staked {
+                let slash_amount = collateral_info.amount;
+                let mut reserve: i128 = env.storage().instance().get(&DataKey::GroupReserve).unwrap_or(0);
+                reserve += slash_amount;
+                env.storage().instance().set(&DataKey::GroupReserve, &reserve);
+                collateral_info.status = CollateralStatus::Slashed;
+                env.storage().instance().set(&collateral_key, &collateral_info);
+            }
         }
     }
 
