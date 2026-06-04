@@ -5,6 +5,7 @@ use sorosusu_contracts::{SoroSusu, SoroSusuClient, DataKey, LeniencyVote, Lenien
 #[test]
 fn test_request_leniency() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, SoroSusu);
     let client = SoroSusuClient::new(&env, &contract_id);
     
@@ -48,6 +49,7 @@ fn test_request_leniency() {
 #[test]
 fn test_vote_on_leniency_approval() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, SoroSusu);
     let client = SoroSusuClient::new(&env, &contract_id);
     
@@ -104,6 +106,7 @@ fn test_vote_on_leniency_approval() {
 #[test]
 fn test_vote_on_leniency_rejection() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, SoroSusu);
     let client = SoroSusuClient::new(&env, &contract_id);
     
@@ -154,6 +157,7 @@ fn test_vote_on_leniency_rejection() {
 #[test]
 fn test_cannot_vote_for_own_request() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, SoroSusu);
     let client = SoroSusuClient::new(&env, &contract_id);
     
@@ -194,6 +198,7 @@ fn test_cannot_vote_for_own_request() {
 #[test]
 fn test_double_voting_prevention() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, SoroSusu);
     let client = SoroSusuClient::new(&env, &contract_id);
     
@@ -239,6 +244,7 @@ fn test_double_voting_prevention() {
 #[test]
 fn test_social_capital_tracking() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, SoroSusu);
     let client = SoroSusuClient::new(&env, &contract_id);
     
@@ -289,6 +295,7 @@ fn test_social_capital_tracking() {
 #[test]
 fn test_leniency_stats_tracking() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, SoroSusu);
     let client = SoroSusuClient::new(&env, &contract_id);
     
@@ -345,6 +352,7 @@ fn test_leniency_stats_tracking() {
 #[test]
 fn test_grace_period_prevents_late_fees() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, SoroSusu);
     let client = SoroSusuClient::new(&env, &contract_id);
     
@@ -394,6 +402,7 @@ fn test_grace_period_prevents_late_fees() {
 #[test]
 fn test_voting_period_expiration() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, SoroSusu);
     let client = SoroSusuClient::new(&env, &contract_id);
     
@@ -446,6 +455,7 @@ fn test_voting_period_expiration() {
 #[test]
 fn test_minimum_participation_requirement() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register_contract(None, SoroSusu);
     let client = SoroSusuClient::new(&env, &contract_id);
     
