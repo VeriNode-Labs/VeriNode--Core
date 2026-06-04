@@ -45,6 +45,8 @@ pub enum Error {
     InvalidProposalType = 33,
     QuorumNotMet = 34,
     ProposalExpired = 35,
+    LeasePayoutNotRegistered = 36,
+    LeasePayoutAlreadyRegistered = 37,
 }
 
 // --- CONSTANTS ---
@@ -88,6 +90,12 @@ pub enum DataKey {
     QuadraticVote(u64, Address),
     VotingPower(Address, u64),
     ProposalStats(u64),
+    // Landlord-Tenant Susu Escrow Integration (#105):
+    // when a tenant wins the pot they can authorize SoroSusu to redirect
+    // the payout to their LeaseInstance contract address as an automated
+    // rent-drip. Storage is keyed by (tenant, circle_id) so each circle's
+    // payout decision is independent.
+    LeasePayout(Address, u64),
 }
 
 #[contracttype]
@@ -254,6 +262,24 @@ pub struct CollateralInfo {
     pub release_timestamp: Option<u64>,
 }
 
+/// Landlord-Tenant Susu Escrow Integration (#105).
+///
+/// When a tenant wins the pot in a Susu circle they can authorize this
+/// contract to redirect their payout directly to a LeaseInstance contract
+/// (the on-chain receipt of a rental agreement). The tenant registers a
+/// `LeasePayoutConfig` per `(tenant, circle_id)`; on the next `claim_pot`,
+/// the token transfer goes to `lease_contract` instead of the tenant, and
+/// a `lease_payout` event is emitted carrying tenant + lease contract +
+/// amount so landlords have verifiable on-chain proof of participation.
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct LeasePayoutConfig {
+    pub tenant: Address,
+    pub circle_id: u64,
+    pub lease_contract: Address,
+    pub registered_at: u64,
+}
+
 #[contracttype]
 #[derive(Clone)]
 pub struct Member {
@@ -370,6 +396,11 @@ pub trait SoroSusuTrait {
     fn slash_collateral(env: Env, caller: Address, circle_id: u64, member: Address);
     fn release_collateral(env: Env, caller: Address, circle_id: u64, member: Address);
     fn mark_member_defaulted(env: Env, caller: Address, circle_id: u64, member: Address);
+
+    // Landlord-Tenant Susu Escrow Integration (#105).
+    fn register_lease_payout(env: Env, tenant: Address, circle_id: u64, lease_contract: Address);
+    fn cancel_lease_payout(env: Env, tenant: Address, circle_id: u64);
+    fn get_lease_payout(env: Env, tenant: Address, circle_id: u64) -> Option<LeasePayoutConfig>;
 }
 
 // --- IMPLEMENTATION ---
@@ -634,7 +665,28 @@ impl SoroSusuTrait for SoroSusu {
 
         let pot_amount = circle.contribution_amount * (circle.member_count as i128);
         let token_client = token::Client::new(&env, &circle.token);
-        token_client.transfer(&env.current_contract_address(), &user, &pot_amount);
+
+        // Landlord-Tenant Susu Escrow Integration (#105):
+        // if the tenant has registered a LeasePayoutConfig for this circle,
+        // redirect the payout to the LeaseInstance contract address as an
+        // automated rent-drip and emit a verifiable event. Otherwise fall
+        // back to the standard tenant-direct transfer.
+        let lease_key = DataKey::LeasePayout(user.clone(), circle_id);
+        let payout_recipient: Address = match env
+            .storage()
+            .instance()
+            .get::<DataKey, LeasePayoutConfig>(&lease_key)
+        {
+            Some(cfg) => {
+                env.events().publish(
+                    (soroban_sdk::symbol_short!("LEASE_PAY"), user.clone()),
+                    (circle_id, cfg.lease_contract.clone(), pot_amount),
+                );
+                cfg.lease_contract
+            }
+            None => user.clone(),
+        };
+        token_client.transfer(&env.current_contract_address(), &payout_recipient, &pot_amount);
 
         // Auto-release collateral if member has completed all contributions
         if circle.requires_collateral {
@@ -1334,12 +1386,104 @@ impl SoroSusuTrait for SoroSusu {
             env.storage().instance().set(&defaulted_key, &defaulted_members);
         }
 
-        // Auto-slash collateral if staked
+        // Auto-slash collateral if staked — inline to avoid double require_auth
+        // (caller auth was already satisfied above; calling Self::slash_collateral
+        // would call caller.require_auth() again, raising Error(Auth, ExistingValue))
         let collateral_key = DataKey::CollateralVault(member.clone(), circle_id);
-        if let Some(_collateral) = env.storage().instance().get::<DataKey, CollateralInfo>(&collateral_key) {
-            // Reuse slash_collateral logic
-            Self::slash_collateral(env, caller, circle_id, member);
+        if let Some(mut collateral_info) = env.storage().instance().get::<DataKey, CollateralInfo>(&collateral_key) {
+            if collateral_info.status == CollateralStatus::Staked {
+                let slash_amount = collateral_info.amount;
+                let mut reserve: i128 = env.storage().instance().get(&DataKey::GroupReserve).unwrap_or(0);
+                reserve += slash_amount;
+                env.storage().instance().set(&DataKey::GroupReserve, &reserve);
+                collateral_info.status = CollateralStatus::Slashed;
+                env.storage().instance().set(&collateral_key, &collateral_info);
+            }
         }
+    }
+
+    // --- Landlord-Tenant Susu Escrow Integration (#105) ---
+
+    /// Register a `LeasePayoutConfig` so the tenant's next `claim_pot` for
+    /// this circle redirects the token transfer to `lease_contract` instead
+    /// of the tenant's own address. The tenant must authorize.
+    fn register_lease_payout(
+        env: Env,
+        tenant: Address,
+        circle_id: u64,
+        lease_contract: Address,
+    ) {
+        tenant.require_auth();
+
+        // Circle must exist and the caller must be a member.
+        let _circle: CircleInfo = env
+            .storage()
+            .instance()
+            .get(&DataKey::Circle(circle_id))
+            .expect("Circle not found");
+        let member_key = DataKey::Member(tenant.clone());
+        if env
+            .storage()
+            .instance()
+            .get::<DataKey, Member>(&member_key)
+            .is_none()
+        {
+            panic!("Member not found");
+        }
+
+        let key = DataKey::LeasePayout(tenant.clone(), circle_id);
+        if env
+            .storage()
+            .instance()
+            .get::<DataKey, LeasePayoutConfig>(&key)
+            .is_some()
+        {
+            panic!("Lease payout already registered");
+        }
+
+        let config = LeasePayoutConfig {
+            tenant: tenant.clone(),
+            circle_id,
+            lease_contract: lease_contract.clone(),
+            registered_at: env.ledger().timestamp(),
+        };
+        env.storage().instance().set(&key, &config);
+
+        env.events().publish(
+            (soroban_sdk::symbol_short!("LEASE_REG"), tenant),
+            (circle_id, lease_contract),
+        );
+    }
+
+    /// Remove a previously registered `LeasePayoutConfig`. After cancelling,
+    /// the tenant's next `claim_pot` reverts to the default behavior of
+    /// transferring the pot to the tenant's own address.
+    fn cancel_lease_payout(env: Env, tenant: Address, circle_id: u64) {
+        tenant.require_auth();
+        let key = DataKey::LeasePayout(tenant.clone(), circle_id);
+        if env
+            .storage()
+            .instance()
+            .get::<DataKey, LeasePayoutConfig>(&key)
+            .is_none()
+        {
+            panic!("Lease payout not registered");
+        }
+        env.storage().instance().remove(&key);
+        env.events().publish(
+            (soroban_sdk::symbol_short!("LEASE_CAN"), tenant),
+            circle_id,
+        );
+    }
+
+    /// Read the current `LeasePayoutConfig` for the tenant in this circle.
+    fn get_lease_payout(
+        env: Env,
+        tenant: Address,
+        circle_id: u64,
+    ) -> Option<LeasePayoutConfig> {
+        let key = DataKey::LeasePayout(tenant, circle_id);
+        env.storage().instance().get(&key)
     }
 }
 
