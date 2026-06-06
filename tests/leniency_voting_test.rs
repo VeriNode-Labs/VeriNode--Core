@@ -1,6 +1,15 @@
-use soroban_sdk::{Address, Env, String, Symbol};
+use soroban_sdk::{Address, Env, String, Symbol, token, contract, contractimpl};
 use soroban_sdk::testutils::{Address as _, Ledger};
 use sorosusu_contracts::{SoroSusu, SoroSusuClient, DataKey, LeniencyVote, LeniencyRequestStatus, MemberStatus};
+
+#[contract]
+pub struct MockNft;
+
+#[contractimpl]
+impl MockNft {
+    pub fn mint(_env: Env, _to: Address, _id: u128) {}
+    pub fn burn(_env: Env, _from: Address, _id: u128) {}
+}
 
 #[test]
 fn test_request_leniency() {
@@ -12,8 +21,11 @@ fn test_request_leniency() {
     let admin = Address::generate(&env);
     let creator = Address::generate(&env);
     let requester = Address::generate(&env);
-    let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let nft_contract = env.register_contract(None, MockNft);
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     // Initialize contract
     client.init(&admin);
@@ -30,6 +42,7 @@ fn test_request_leniency() {
     );
     
     // Join circle
+    token_client.mint(&requester, &1_000_000_0);
     client.join_circle(&requester, &circle_id, &1u32, &None);
     
     // Request leniency
@@ -59,8 +72,11 @@ fn test_vote_on_leniency_approval() {
     let voter1 = Address::generate(&env);
     let voter2 = Address::generate(&env);
     let voter3 = Address::generate(&env);
-    let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let nft_contract = env.register_contract(None, MockNft);
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     // Initialize contract
     client.init(&admin);
@@ -77,9 +93,13 @@ fn test_vote_on_leniency_approval() {
     );
     
     // Join circle
+    token_client.mint(&requester, &1_000_000_0);
     client.join_circle(&requester, &circle_id, &1u32, &None);
+    token_client.mint(&voter1, &1_000_000_0);
     client.join_circle(&voter1, &circle_id, &1u32, &None);
+    token_client.mint(&voter2, &1_000_000_0);
     client.join_circle(&voter2, &circle_id, &1u32, &None);
+    token_client.mint(&voter3, &1_000_000_0);
     client.join_circle(&voter3, &circle_id, &1u32, &None);
     
     // Request leniency
@@ -97,10 +117,12 @@ fn test_vote_on_leniency_approval() {
     assert_eq!(request.reject_votes, 0);
     
     // Verify grace period was applied
-    let circle_key = DataKey::Circle(circle_id);
-    let circle = env.storage().instance().get::<_, sorosusu_contracts::CircleInfo>(&circle_key).unwrap();
-    assert!(circle.grace_period_end.is_some());
-    assert!(circle.grace_period_end.unwrap() > circle.deadline_timestamp);
+    env.as_contract(&contract_id, || {
+        let circle_key = DataKey::Circle(circle_id);
+        let circle = env.storage().instance().get::<_, sorosusu_contracts::CircleInfo>(&circle_key).unwrap();
+        assert!(circle.grace_period_end.is_some());
+        assert!(circle.grace_period_end.unwrap() > circle.deadline_timestamp);
+    });
 }
 
 #[test]
@@ -116,8 +138,11 @@ fn test_vote_on_leniency_rejection() {
     let voter1 = Address::generate(&env);
     let voter2 = Address::generate(&env);
     let voter3 = Address::generate(&env);
-    let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let nft_contract = env.register_contract(None, MockNft);
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     // Initialize contract
     client.init(&admin);
@@ -134,9 +159,13 @@ fn test_vote_on_leniency_rejection() {
     );
     
     // Join circle
+    token_client.mint(&requester, &1_000_000_0);
     client.join_circle(&requester, &circle_id, &1u32, &None);
+    token_client.mint(&voter1, &1_000_000_0);
     client.join_circle(&voter1, &circle_id, &1u32, &None);
+    token_client.mint(&voter2, &1_000_000_0);
     client.join_circle(&voter2, &circle_id, &1u32, &None);
+    token_client.mint(&voter3, &1_000_000_0);
     client.join_circle(&voter3, &circle_id, &1u32, &None);
     
     // Request leniency
@@ -164,8 +193,11 @@ fn test_cannot_vote_for_own_request() {
     let admin = Address::generate(&env);
     let creator = Address::generate(&env);
     let requester = Address::generate(&env);
-    let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let nft_contract = env.register_contract(None, MockNft);
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     // Initialize contract
     client.init(&admin);
@@ -182,6 +214,7 @@ fn test_cannot_vote_for_own_request() {
     );
     
     // Join circle
+    token_client.mint(&requester, &1_000_000_0);
     client.join_circle(&requester, &circle_id, &1u32, &None);
     
     // Request leniency
@@ -206,8 +239,11 @@ fn test_double_voting_prevention() {
     let creator = Address::generate(&env);
     let requester = Address::generate(&env);
     let voter = Address::generate(&env);
-    let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let nft_contract = env.register_contract(None, MockNft);
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     // Initialize contract
     client.init(&admin);
@@ -224,7 +260,9 @@ fn test_double_voting_prevention() {
     );
     
     // Join circle
+    token_client.mint(&requester, &1_000_000_0);
     client.join_circle(&requester, &circle_id, &1u32, &None);
+    token_client.mint(&voter, &1_000_000_0);
     client.join_circle(&voter, &circle_id, &1u32, &None);
     
     // Request leniency
@@ -252,8 +290,11 @@ fn test_social_capital_tracking() {
     let creator = Address::generate(&env);
     let requester = Address::generate(&env);
     let voter = Address::generate(&env);
-    let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let nft_contract = env.register_contract(None, MockNft);
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     // Initialize contract
     client.init(&admin);
@@ -270,7 +311,9 @@ fn test_social_capital_tracking() {
     );
     
     // Join circle
+    token_client.mint(&requester, &1_000_000_0);
     client.join_circle(&requester, &circle_id, &1u32, &None);
+    token_client.mint(&voter, &1_000_000_0);
     client.join_circle(&voter, &circle_id, &1u32, &None);
     
     // Request leniency
@@ -305,8 +348,11 @@ fn test_leniency_stats_tracking() {
     let requester2 = Address::generate(&env);
     let voter1 = Address::generate(&env);
     let voter2 = Address::generate(&env);
-    let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let nft_contract = env.register_contract(None, MockNft);
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     // Initialize contract
     client.init(&admin);
@@ -323,9 +369,13 @@ fn test_leniency_stats_tracking() {
     );
     
     // Join circle
+    token_client.mint(&requester1, &1_000_000_0);
     client.join_circle(&requester1, &circle_id, &1u32, &None);
+    token_client.mint(&requester2, &1_000_000_0);
     client.join_circle(&requester2, &circle_id, &1u32, &None);
+    token_client.mint(&voter1, &1_000_000_0);
     client.join_circle(&voter1, &circle_id, &1u32, &None);
+    token_client.mint(&voter2, &1_000_000_0);
     client.join_circle(&voter2, &circle_id, &1u32, &None);
     
     // Request leniency for requester1
@@ -360,8 +410,11 @@ fn test_grace_period_prevents_late_fees() {
     let creator = Address::generate(&env);
     let requester = Address::generate(&env);
     let voter = Address::generate(&env);
-    let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let nft_contract = env.register_contract(None, MockNft);
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     // Initialize contract
     client.init(&admin);
@@ -378,7 +431,9 @@ fn test_grace_period_prevents_late_fees() {
     );
     
     // Join circle
+    token_client.mint(&requester, &1_000_000_0);
     client.join_circle(&requester, &circle_id, &1u32, &None);
+    token_client.mint(&voter, &1_000_000_0);
     client.join_circle(&voter, &circle_id, &1u32, &None);
     
     // Request leniency
@@ -390,10 +445,12 @@ fn test_grace_period_prevents_late_fees() {
     env.ledger().set_timestamp(env.ledger().timestamp() + 7200); // 2 hours later
     
     // Verify grace period is active
-    let circle_key = DataKey::Circle(circle_id);
-    let circle = env.storage().instance().get::<_, sorosusu_contracts::CircleInfo>(&circle_key).unwrap();
-    assert!(circle.grace_period_end.is_some());
-    assert!(env.ledger().timestamp() < circle.grace_period_end.unwrap());
+    env.as_contract(&contract_id, || {
+        let circle_key = DataKey::Circle(circle_id);
+        let circle = env.storage().instance().get::<_, sorosusu_contracts::CircleInfo>(&circle_key).unwrap();
+        assert!(circle.grace_period_end.is_some());
+        assert!(env.ledger().timestamp() < circle.grace_period_end.unwrap());
+    });
     
     // In a real test with token contracts, deposit would succeed without late fees
     // This test verifies the grace period logic is working
@@ -410,8 +467,11 @@ fn test_voting_period_expiration() {
     let creator = Address::generate(&env);
     let requester = Address::generate(&env);
     let voter = Address::generate(&env);
-    let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let nft_contract = env.register_contract(None, MockNft);
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     // Initialize contract
     client.init(&admin);
@@ -428,7 +488,9 @@ fn test_voting_period_expiration() {
     );
     
     // Join circle
+    token_client.mint(&requester, &1_000_000_0);
     client.join_circle(&requester, &circle_id, &1u32, &None);
+    token_client.mint(&voter, &1_000_000_0);
     client.join_circle(&voter, &circle_id, &1u32, &None);
     
     // Request leniency
@@ -463,8 +525,11 @@ fn test_minimum_participation_requirement() {
     let creator = Address::generate(&env);
     let requester = Address::generate(&env);
     let voter = Address::generate(&env);
-    let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let nft_contract = env.register_contract(None, MockNft);
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     // Initialize contract
     client.init(&admin);
@@ -481,7 +546,9 @@ fn test_minimum_participation_requirement() {
     );
     
     // Join circle (only 2 members total for this test)
+    token_client.mint(&requester, &1_000_000_0);
     client.join_circle(&requester, &circle_id, &1u32, &None);
+    token_client.mint(&voter, &1_000_000_0);
     client.join_circle(&voter, &circle_id, &1u32, &None);
     
     // Request leniency
