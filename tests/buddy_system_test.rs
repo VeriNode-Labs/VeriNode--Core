@@ -22,7 +22,9 @@ fn test_buddy_pairing() {
     
     // Register mock token
     let token_admin = Address::generate(&env);
-    let token = env.register_stellar_asset_contract(token_admin.clone());
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     let nft_contract = env.register_contract(None, MockNft);
 
@@ -44,16 +46,16 @@ fn test_buddy_pairing() {
     );
 
     // Both users join the circle
+    token_client.mint(&user1, &5000);
     client.join_circle(&user1, &circle_id, &1, &None);
+    token_client.mint(&user2, &5000);
     client.join_circle(&user2, &circle_id, &1, &None);
 
     // User1 pairs with User2 as buddy
     client.pair_with_member(&user1, &user2);
 
     // User2 sets safety deposit
-    // Need to mint tokens to user2 first
-    let token_client = token::StellarAssetClient::new(&env, &token);
-    token_client.mint(&user2, &5000);
+    // user2 already minted above
     
     client.set_safety_deposit(&user2, &circle_id, &2000);
 
@@ -72,7 +74,9 @@ fn test_buddy_payment_fallback() {
     
     // Register mock token
     let token_admin = Address::generate(&env);
-    let token = env.register_stellar_asset_contract(token_admin.clone());
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token = token_contract.address();
+    let token_client = token::StellarAssetClient::new(&env, &token);
     
     let nft_contract = env.register_contract(None, MockNft);
 
@@ -94,15 +98,16 @@ fn test_buddy_payment_fallback() {
     );
 
     // Both users join the circle
+    token_client.mint(&user1, &5000);
     client.join_circle(&user1, &circle_id, &1, &None);
+    token_client.mint(&user2, &5000);
     client.join_circle(&user2, &circle_id, &1, &None);
 
     // User1 pairs with User2 as buddy
     client.pair_with_member(&user1, &user2);
 
     // User2 sets safety deposit (enough to cover user1's payment)
-    let token_client = token::StellarAssetClient::new(&env, &token);
-    token_client.mint(&user2, &5000);
+    // user2 already minted above
     
     client.set_safety_deposit(&user2, &circle_id, &2000);
 
