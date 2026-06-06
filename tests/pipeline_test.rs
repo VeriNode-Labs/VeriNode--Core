@@ -30,7 +30,8 @@ fn test_full_rosca_cycle() {
     
     // Deploy mock token
     let token_admin = Address::generate(&env);
-    let token_id = env.register_stellar_asset_contract(token_admin.clone());
+    let token_contract = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token_id = token_contract.address();
     let token_client = token::StellarAssetClient::new(&env, &token_id);
     let token_token_client = token::Client::new(&env, &token_id);
     
