@@ -1,14 +1,34 @@
-# VeriNode--Core: Decentralized Savings Circle
+# VeriNode--Core
 
-A trustless Rotating Savings and Credit Association (ROSCA) built on Stellar Soroban.
+Core smart contracts for the VeriNode Decentralized Savings Circle protocol, providing a trustless Rotating Savings and Credit Association (ROSCA) infrastructure on Stellar Soroban.
 
-- **Network:** Stellar Mainnet
-- **Contract ID:** CAH65U2KXQ34G7AT7QMWP6WUFYWAV6RPJRSDOB4KID6TP3OORS3BQHCX
+## 🚀 Key Features
+* **Decentralized ROSCA Protocol:** Create and join savings circles with custom contribution rules, cycle rollovers, and automated payouts.
+* **Collateralized Entry & Slashing:** Built-in collateral requirements for high-value groups with slashing mechanisms for defaulting members.
+* **Leniency Voting & Buddy System:** Governance extensions for grace periods via democratic voting and buddy pairing safety fallback payments.
 
-See [DOCUMENTATION.md](./DOCUMENTATION.md) for the complete protocol documentation, including contract API reference, feature specifications, formal verification, and troubleshooting.
+## 🛠️ Tech Stack
+* **Language/Framework:** Rust / Soroban WASM
+* **Key Dependencies:** `soroban-sdk`
 
-## Quick Start
+## 📦 Getting Started
 
+### Prerequisites
+Ensure you have the required toolchains installed:
+* Rust toolchain (cargo, rustc)
+* Stellar CLI / Soroban CLI
+
+### Installation & Local Setup
 ```bash
+# Clone the repository (if running manually)
+git clone https://github.com/VeriNode-Labs/VeriNode--Core
+
+# Build the smart contracts
 cargo build --target wasm32-unknown-unknown --release
+
+# Run the test suite
+cargo test
 ```
+
+## 🤝 Contributing
+Contributions are highly welcome. Please ensure your commits are cryptographically signed using GPG or SSH keys. For major structural changes, please open an issue first to discuss your proposal.

@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, Env, String, Symbol, token, contract, contractimpl};
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::testutils::Ledger;
-use sorosusu_contracts::{SoroSusu, SoroSusuClient, DataKey, ProposalType, ProposalStatus, QuadraticVoteChoice};
+use sorosusu_contracts::{CircleInfo, SoroSusu, SoroSusuClient, DataKey, ProposalType, ProposalStatus, QuadraticVoteChoice};
 
 #[contract]
 pub struct MockNft;
@@ -33,7 +33,7 @@ fn test_quadratic_voting_enabled_for_large_groups() {
     // Create large group (>= 10 members) - quadratic voting should be enabled
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0, // 100 XLM
+        &50_000_0, // 50 XLM - below high value threshold so no collateral needed
         &15u32,      // 15 members
         &token,
         &86400u64,
@@ -50,6 +50,9 @@ fn test_quadratic_voting_enabled_for_large_groups() {
     
     // Advance time to avoid rate limit
     env.ledger().set_timestamp(env.ledger().timestamp() + 400);
+    
+    // Advance ledger time past rate limit
+    env.ledger().set_timestamp(env.ledger().timestamp() + 301);
     
     // Create small group (< 10 members) - quadratic voting should be disabled
     let small_circle_id = client.create_circle(
@@ -92,7 +95,7 @@ fn test_create_proposal() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &50_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -196,7 +199,7 @@ fn test_voting_power_calculation() {
     // Create circle
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &50_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -245,7 +248,7 @@ fn test_quadratic_vote_cost_calculation() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &50_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -311,7 +314,7 @@ fn test_insufficient_voting_power() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &50_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -380,7 +383,7 @@ fn test_double_voting_prevention() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &50_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -448,7 +451,7 @@ fn test_quorum_requirement() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &50_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -466,6 +469,8 @@ fn test_quorum_requirement() {
     token_client.mint(&voter2, &3_000_000_0);
     client.stake_collateral(&voter2, &circle_id, &3_000_000_0);
     client.join_circle(&voter2, &circle_id, &1u32, &None);
+    client.join_circle(&voter3, &circle_id, &1u32, &None);
+    client.join_circle(&voter4, &circle_id, &1u32, &None);
     
     // Create proposal
     let title = String::from_str(&env, "Test proposal");
@@ -486,17 +491,17 @@ fn test_quorum_requirement() {
     client.update_voting_power(&voter2, &circle_id, &1_000_000_0);
     
     // Vote with low participation (should not meet quorum)
-    client.quadratic_vote(&voter1, &proposal_id, &2u32, &QuadraticVoteChoice::For); // Cost: 4
+    client.quadratic_vote(&voter1, &proposal_id, &1u32, &QuadraticVoteChoice::For); // Cost: 1
     
     let proposal = client.get_proposal(&proposal_id);
-    assert!(!proposal.quorum_met); // Should not meet 40% quorum
+    assert!(!proposal.quorum_met); // 5 members: quorum=2, cost=1 < 2, not met
     
     // Add more votes to meet quorum
     client.quadratic_vote(&voter2, &proposal_id, &3u32, &QuadraticVoteChoice::For); // Cost: 9
     
     let updated_proposal = client.get_proposal(&proposal_id);
-    assert_eq!(updated_proposal.for_votes, 13); // 4 + 9
-    assert!(updated_proposal.quorum_met); // Should now meet quorum
+    assert_eq!(updated_proposal.for_votes, 10); // 1 + 9
+    assert!(updated_proposal.quorum_met); // 10 >= 2, quorum met
 }
 
 #[ignore = "pre-existing contract bug: execute_proposal increments approved_proposals instead of executed_proposals"]
@@ -525,7 +530,7 @@ fn test_proposal_execution() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &50_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -613,7 +618,7 @@ fn test_proposal_rejection_insufficient_majority() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &50_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -694,7 +699,7 @@ fn test_max_vote_weight_enforcement() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &50_000_0,
         &15u32,
         &token,
         &86400u64,
