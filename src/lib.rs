@@ -1,8 +1,19 @@
 #![no_std]
+
+#[path = "proxy/storage-layout.rs"]
+pub mod storage_layout;
+
+#[path = "proxy/upgrade-beacon.rs"]
+pub mod upgrade_beacon;
+
+#[path = "state/beacon-state.rs"]
+pub mod beacon_state;
+
 use soroban_sdk::{
     contract, contractclient, contracterror, contractimpl, contracttype, token,
     Address, Env, String, Vec,
 };
+
 
 // --- ERROR CODES ---
 

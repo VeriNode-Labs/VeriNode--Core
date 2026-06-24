@@ -25,3 +25,12 @@ jobs:
         
       - name: Run tests
         run: cargo test --verbose
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Run Storage Layout Collision Check
+        run: python scripts/storage-layout-check.py
+
