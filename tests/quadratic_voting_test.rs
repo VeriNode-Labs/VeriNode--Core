@@ -3,6 +3,15 @@ use soroban_sdk::testutils::Address as _;
 use soroban_sdk::testutils::Ledger;
 use sorosusu_contracts::{SoroSusu, SoroSusuClient, DataKey, ProposalType, ProposalStatus, QuadraticVoteChoice};
 
+#[soroban_sdk::contract]
+pub struct MockNft;
+
+#[soroban_sdk::contractimpl]
+impl MockNft {
+    pub fn mint(_env: Env, _to: soroban_sdk::Address, _id: u128) {}
+    pub fn burn(_env: Env, _from: soroban_sdk::Address, _id: u128) {}
+}
+
 #[test]
 fn test_quadratic_voting_enabled_for_large_groups() {
     let env = Env::default();
@@ -12,8 +21,9 @@ fn test_quadratic_voting_enabled_for_large_groups() {
     
     let admin = Address::generate(&env);
     let creator = Address::generate(&env);
+    let creator2 = Address::generate(&env);
     let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let nft_contract = env.register_contract(None, MockNft);
     
     // Initialize contract
     client.init(&admin);
@@ -21,7 +31,7 @@ fn test_quadratic_voting_enabled_for_large_groups() {
     // Create large group (>= 10 members) - quadratic voting should be enabled
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0, // 100 XLM
+        &10_000_0, // 10 XLM
         &15u32,      // 15 members
         &token,
         &86400u64,
@@ -30,14 +40,16 @@ fn test_quadratic_voting_enabled_for_large_groups() {
     );
     
     // Verify quadratic voting is enabled
-    let circle_key = DataKey::Circle(circle_id);
-    let circle = env.storage().instance().get::<_, sorosusu_contracts::CircleInfo>(&circle_key).unwrap();
-    assert!(circle.quadratic_voting_enabled);
+    env.as_contract(&contract_id, || {
+        let circle_key = DataKey::Circle(circle_id);
+        let circle = env.storage().instance().get::<_, sorosusu_contracts::CircleInfo>(&circle_key).unwrap();
+        assert!(circle.quadratic_voting_enabled);
+    });
     
     // Create small group (< 10 members) - quadratic voting should be disabled
     let small_circle_id = client.create_circle(
-        &creator,
-        &100_000_0,
+        &creator2,
+        &10_000_0,
         &5u32,       // 5 members
         &token,
         &86400u64,
@@ -46,9 +58,11 @@ fn test_quadratic_voting_enabled_for_large_groups() {
     );
     
     // Verify quadratic voting is disabled
-    let small_circle_key = DataKey::Circle(small_circle_id);
-    let small_circle = env.storage().instance().get::<_, sorosusu_contracts::CircleInfo>(&small_circle_key).unwrap();
-    assert!(!small_circle.quadratic_voting_enabled);
+    env.as_contract(&contract_id, || {
+        let small_circle_key = DataKey::Circle(small_circle_id);
+        let small_circle = env.storage().instance().get::<_, sorosusu_contracts::CircleInfo>(&small_circle_key).unwrap();
+        assert!(!small_circle.quadratic_voting_enabled);
+    });
 }
 
 #[test]
@@ -62,7 +76,7 @@ fn test_create_proposal() {
     let creator = Address::generate(&env);
     let proposer = Address::generate(&env);
     let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let nft_contract = env.register_contract(None, MockNft);
     
     // Initialize contract
     client.init(&admin);
@@ -70,7 +84,7 @@ fn test_create_proposal() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &10_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -116,7 +130,7 @@ fn test_create_proposal_fails_for_small_groups() {
     let creator = Address::generate(&env);
     let proposer = Address::generate(&env);
     let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let nft_contract = env.register_contract(None, MockNft);
     
     // Initialize contract
     client.init(&admin);
@@ -124,7 +138,7 @@ fn test_create_proposal_fails_for_small_groups() {
     // Create small group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &10_000_0,
         &5u32, // Small group
         &token,
         &86400u64,
@@ -157,7 +171,7 @@ fn test_voting_power_calculation() {
     let creator = Address::generate(&env);
     let member = Address::generate(&env);
     let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let nft_contract = env.register_contract(None, MockNft);
     
     // Initialize contract
     client.init(&admin);
@@ -165,7 +179,7 @@ fn test_voting_power_calculation() {
     // Create circle
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &10_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -201,7 +215,7 @@ fn test_quadratic_vote_cost_calculation() {
     let proposer = Address::generate(&env);
     let voter = Address::generate(&env);
     let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let nft_contract = env.register_contract(None, MockNft);
     
     // Initialize contract
     client.init(&admin);
@@ -209,7 +223,7 @@ fn test_quadratic_vote_cost_calculation() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &10_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -260,7 +274,7 @@ fn test_insufficient_voting_power() {
     let proposer = Address::generate(&env);
     let voter = Address::generate(&env);
     let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let nft_contract = env.register_contract(None, MockNft);
     
     // Initialize contract
     client.init(&admin);
@@ -268,7 +282,7 @@ fn test_insufficient_voting_power() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &10_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -295,7 +309,7 @@ fn test_insufficient_voting_power() {
     );
     
     // Set low voting power (only enough for weight 5 vote: 5^2 = 25)
-    client.update_voting_power(&voter, &circle_id, &1_000_000_0);
+    client.update_voting_power(&voter, &circle_id, &25_000);
     
     // Try to vote with weight 10 (cost = 10^2 = 100) - should fail
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -322,7 +336,7 @@ fn test_double_voting_prevention() {
     let proposer = Address::generate(&env);
     let voter = Address::generate(&env);
     let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let nft_contract = env.register_contract(None, MockNft);
     
     // Initialize contract
     client.init(&admin);
@@ -330,7 +344,7 @@ fn test_double_voting_prevention() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &10_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -382,7 +396,7 @@ fn test_quorum_requirement() {
     let voter1 = Address::generate(&env);
     let voter2 = Address::generate(&env);
     let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let nft_contract = env.register_contract(None, MockNft);
     
     // Initialize contract
     client.init(&admin);
@@ -390,7 +404,7 @@ fn test_quorum_requirement() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &10_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -416,6 +430,12 @@ fn test_quorum_requirement() {
         &description,
         &execution_data,
     );
+    
+    // Add dummy members to reach 15 total members
+    for _ in 0..12 {
+        let dummy = Address::generate(&env);
+        client.join_circle(&dummy, &circle_id, &1u32, &None);
+    }
     
     // Set up voting power
     client.update_voting_power(&voter1, &circle_id, &1_000_000_0);
@@ -449,7 +469,7 @@ fn test_proposal_execution() {
     let voter2 = Address::generate(&env);
     let voter3 = Address::generate(&env);
     let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let nft_contract = env.register_contract(None, MockNft);
     
     // Initialize contract
     client.init(&admin);
@@ -457,7 +477,7 @@ fn test_proposal_execution() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &10_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -526,7 +546,7 @@ fn test_proposal_rejection_insufficient_majority() {
     let voter1 = Address::generate(&env);
     let voter2 = Address::generate(&env);
     let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let nft_contract = env.register_contract(None, MockNft);
     
     // Initialize contract
     client.init(&admin);
@@ -534,7 +554,7 @@ fn test_proposal_rejection_insufficient_majority() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &10_000_0,
         &15u32,
         &token,
         &86400u64,
@@ -598,7 +618,7 @@ fn test_max_vote_weight_enforcement() {
     let proposer = Address::generate(&env);
     let voter = Address::generate(&env);
     let token = Address::generate(&env);
-    let nft_contract = Address::generate(&env);
+    let nft_contract = env.register_contract(None, MockNft);
     
     // Initialize contract
     client.init(&admin);
@@ -606,7 +626,7 @@ fn test_max_vote_weight_enforcement() {
     // Create large group
     let circle_id = client.create_circle(
         &creator,
-        &100_000_0,
+        &10_000_0,
         &15u32,
         &token,
         &86400u64,
