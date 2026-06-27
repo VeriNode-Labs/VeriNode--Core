@@ -3,11 +3,13 @@
 extern crate alloc;
 use alloc::vec::Vec;
 
+use crate::validator::activation_queue::{ActivationQueue, ActivationQueueError};
 use crate::validator::exit_queue::{Epoch, ExitQueue, ExitQueueError, ValidatorIndex};
 
 /// Lifecycle status of a validator.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ValidatorStatus {
+    Pending,
     Active,
     ExitQueued,
     Exited,
@@ -25,6 +27,7 @@ pub struct Validator {
 #[derive(Clone, Debug, Default)]
 pub struct ValidatorSet {
     validators: Vec<Validator>,
+    activation_queue: ActivationQueue,
     exit_queue: ExitQueue,
     /// Slot at which the last reorganization occurred
     last_reorg_slot: Option<u64>,
@@ -35,6 +38,7 @@ impl ValidatorSet {
     pub fn new() -> Self {
         Self {
             validators: Vec::new(),
+            activation_queue: ActivationQueue::new(),
             exit_queue: ExitQueue::new(),
             last_reorg_slot: None,
         }
@@ -47,6 +51,50 @@ impl ValidatorSet {
             status: ValidatorStatus::Active,
             exit_epoch: None,
         });
+    }
+
+    /// Register a new pending validator and queue it for activation.
+    pub fn add_pending_validator(
+        &mut self,
+        index: ValidatorIndex,
+        activation_epoch: Epoch,
+    ) -> Result<(), ActivationQueueError> {
+        self.activation_queue
+            .push_activation(activation_epoch, index)?;
+        self.validators.push(Validator {
+            index,
+            status: ValidatorStatus::Pending,
+            exit_epoch: None,
+        });
+        Ok(())
+    }
+
+    /// Number of activations currently queued.
+    pub fn queued_activations(&self) -> usize {
+        self.activation_queue.len()
+    }
+
+    /// Activate a pending validator by index.
+    pub fn activate_validator(&mut self, index: ValidatorIndex) -> bool {
+        if let Some(v) = self.validators.iter_mut().find(|v| v.index == index) {
+            if v.status == ValidatorStatus::Pending {
+                v.status = ValidatorStatus::Active;
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Process all activations eligible at or before `current_epoch`.
+    pub fn process_activation_queue(&mut self, current_epoch: Epoch) -> Vec<ValidatorIndex> {
+        let drained = self.activation_queue.drain_eligible(current_epoch);
+        let mut processed = Vec::with_capacity(drained.len());
+        for (_, index) in drained {
+            if self.activate_validator(index) {
+                processed.push(index);
+            }
+        }
+        processed
     }
 
     /// Look up a validator by index.
