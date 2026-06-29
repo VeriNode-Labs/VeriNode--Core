@@ -1,4 +1,17 @@
+use super::historical_window::CircularWindow;
 use super::types::{DecayFactor, EmaWeights, ReputationScore, TimeSinceLastUpdate, MAX_REPUTATION};
+
+/// Computes the weighted average of scores in a circular window, using only
+/// the actual number of valid entries written (not the full buffer size).
+pub fn compute_weighted_average(window: &CircularWindow) -> u64 {
+    let entries = window.effective_entries();
+    let count = entries.len();
+    if count == 0 {
+        return 0;
+    }
+    let sum: u64 = entries.iter().sum();
+    sum / count as u64
+}
 
 /// Updates a reputation score using a bounded exponential moving average.
 ///
