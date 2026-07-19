@@ -26,6 +26,12 @@ pub mod state;
 pub mod validator;
 pub mod db;
 
+// Mempool transaction ordering with priority-fee auction (issue #63), and
+// its paired fee-burn settlement in `consensus::fee`. Self-contained: see
+// `mempool` module docs for why it does not extend the SoroSusu contract or
+// the beacon-chain-style consensus modules above.
+pub mod mempool;
+
 // --- ERROR CODES ---
 
 #[contracterror]
