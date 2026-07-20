@@ -37,3 +37,7 @@ path = "tests/bls_comprehensive_test.rs"
 [[test]]
 name = "dkg_serialization_roundtrip_test"
 path = "tests/crypto/dkg_serialization_roundtrip_test.rs"
+
+[[test]]
+name = "balance_underflow_test"
+path = "tests/validator/balance_underflow_test.rs"
