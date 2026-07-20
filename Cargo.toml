@@ -37,3 +37,7 @@ path = "tests/bls_comprehensive_test.rs"
 [[test]]
 name = "dkg_serialization_roundtrip_test"
 path = "tests/crypto/dkg_serialization_roundtrip_test.rs"
+
+[[test]]
+name = "proof_of_connectivity_epoch_nonce_test"
+path = "tests/attestation/proof_of_connectivity_epoch_nonce_test.rs"
