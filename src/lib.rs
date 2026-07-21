@@ -26,6 +26,14 @@ pub mod state;
 pub mod validator;
 pub mod db;
 
+// Batch bond-settlement via Merkle-proof commit-reveal (issue #57).
+// Self-contained, following the same pattern as `slashing_core` above (a
+// plain Rust module, not a `SoroSusu` extension) — but it shares
+// `slashing_core::slashing`'s `BondPool` storage key rather than keeping a
+// second, parallel bond ledger. See `settlement` module docs for the full
+// front-running rationale.
+pub mod settlement;
+
 // --- ERROR CODES ---
 
 #[contracterror]
