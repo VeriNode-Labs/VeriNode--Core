@@ -170,7 +170,7 @@ proptest! {
         let nonce_a = derive_nonce(epoch_a, &seed, &node);
         let nonce_b = derive_nonce(epoch_b, &seed, &node);
         prop_assert_ne!(nonce_a, nonce_b,
-            "epoch_a={epoch_a}, epoch_b={epoch_b} produced the same nonce with seed={seed_val}"
+            "epoch_a={}, epoch_b={} produced the same nonce with seed={}", epoch_a, epoch_b, seed_val
         );
     }
 }
