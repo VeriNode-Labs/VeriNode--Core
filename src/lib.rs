@@ -32,6 +32,11 @@ pub mod db;
 // the beacon-chain-style consensus modules above.
 pub mod mempool;
 
+// Pool manager with tenant bond locking/unlocking and reentrancy protection
+// (issue #58). Implements the checks-effects-interactions pattern and uses
+// a reentrancy guard to prevent bond pool drainage via ERC-20 callback attacks.
+pub mod pool_manager;
+
 // --- ERROR CODES ---
 
 #[contracterror]
