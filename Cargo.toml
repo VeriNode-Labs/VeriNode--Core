@@ -41,3 +41,11 @@ path = "tests/crypto/dkg_serialization_roundtrip_test.rs"
 [[test]]
 name = "proof_of_connectivity_epoch_nonce_test"
 path = "tests/attestation/proof_of_connectivity_epoch_nonce_test.rs"
+
+[[test]]
+name = "backup_verification_test"
+path = "tests/backup_verification_test.rs"
+
+[[test]]
+name = "webhook_delivery_test"
+path = "tests/webhook_delivery_test.rs"

@@ -45,6 +45,16 @@ pub mod mempool;
 // a reentrancy guard to prevent bond pool drainage via ERC-20 callback attacks.
 pub mod pool_manager;
 
+// State snapshot backup verification with restore testing (issue #70).
+// Scheduled snapshots carry Merkle-style integrity hashes to detect
+// corruption; restore testing verifies that a restored state matches.
+pub mod backup;
+
+// Webhook delivery service with retry and signature verification (issue #68).
+// Signed, domain-separated outbound payloads are delivered with
+// exponential-backoff retry and verified via BLS signature checks.
+pub mod webhook;
+
 // --- ERROR CODES ---
 
 #[contracterror]
