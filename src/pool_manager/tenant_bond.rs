@@ -295,7 +295,7 @@ impl TenantBondManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{testutils::Address as _, Env};
+    use soroban_sdk::{testutils::{Address as _, Ledger as _}, Env};
 
     // ---------------------------------------------------------------------------
     // Lock tests
@@ -380,9 +380,7 @@ mod tests {
             .expect("lock should succeed");
 
         // Advance ledger time past the minimum lock duration
-        env.ledger().with_mut(|l| {
-            l.timestamp = MIN_LOCK_DURATION + 1;
-        });
+        env.ledger_mut().set_timestamp(MIN_LOCK_DURATION + 1);
 
         let unlocked = TenantBondManager::unlock_tenant_bond(&env, &tenant)
             .expect("unlock should succeed");
@@ -404,9 +402,7 @@ mod tests {
         TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT)
             .expect("lock should succeed");
 
-        env.ledger().with_mut(|l| {
-            l.timestamp = MIN_LOCK_DURATION + 1;
-        });
+        env.ledger_mut().set_timestamp(MIN_LOCK_DURATION + 1);
 
         TenantBondManager::unlock_tenant_bond(&env, &tenant)
             .expect("first unlock should succeed");
@@ -441,9 +437,7 @@ mod tests {
         }
 
         // Advance time past lock duration
-        env.ledger().with_mut(|l| {
-            l.timestamp = MIN_LOCK_DURATION + 1;
-        });
+        env.ledger_mut().set_timestamp(MIN_LOCK_DURATION + 1);
 
         // Verify invariant before unlocking: totalBonded == sum(activeBonds)
         let total = TenantBondManager::total_bonded(&env);
@@ -480,11 +474,11 @@ mod tests {
             // We test this by directly exercising the guard rather than
             // going through TenantBondManager, as Soroban's WASM sandbox
             // serializes all external calls.
-            let guard_acquired = std::panic::catch_unwind(|| {
+            let guard_acquired = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let _guard1 = ReentrancyGuard::new(&env);
                 // Inner guard should panic
                 let _guard2 = ReentrancyGuard::new(&env);
-            });
+            }));
 
             assert!(
                 guard_acquired.is_err(),
@@ -493,9 +487,9 @@ mod tests {
 
             // The outer guard dropped in the catch_unwind, so the flag is cleared.
             // Verify we can enter again after the guard is released.
-            let sequential_ok = std::panic::catch_unwind(|| {
+            let sequential_ok = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let _g = ReentrancyGuard::new(&env);
-            });
+            }));
             assert!(
                 sequential_ok.is_ok(),
                 "pattern {pattern}: guard should allow entry after release"
@@ -542,9 +536,7 @@ mod tests {
         TenantBondManager::lock_tenant_bond(&env, &tenant, 500)
             .expect("lock should succeed");
 
-        env.ledger().with_mut(|l| {
-            l.timestamp = MIN_LOCK_DURATION + 1;
-        });
+        env.ledger_mut().set_timestamp(MIN_LOCK_DURATION + 1);
 
         TenantBondManager::unlock_tenant_bond(&env, &tenant)
             .expect("unlock should succeed");
