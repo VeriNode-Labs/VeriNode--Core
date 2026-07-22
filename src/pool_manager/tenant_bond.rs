@@ -295,7 +295,8 @@ impl TenantBondManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{testutils::Address as _, Env};
+    use crate::SoroSusu;
+    use soroban_sdk::{testutils::Address as _, testutils::Ledger as _, Env};
 
     // ---------------------------------------------------------------------------
     // Lock tests
@@ -304,45 +305,57 @@ mod tests {
     #[test]
     fn test_lock_valid_bond() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         let tenant = Address::generate(&env);
 
-        TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT)
-            .expect("lock should succeed");
+        env.as_contract(&contract_id, || {
+            TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT)
+                .expect("lock should succeed");
 
-        let entry = TenantBondManager::get_bond(&env, &tenant).expect("bond should exist");
-        assert!(entry.is_locked);
-        assert_eq!(entry.amount, MIN_BOND_AMOUNT);
-        assert_eq!(TenantBondManager::total_bonded(&env), MIN_BOND_AMOUNT);
+            let entry = TenantBondManager::get_bond(&env, &tenant).expect("bond should exist");
+            assert!(entry.is_locked);
+            assert_eq!(entry.amount, MIN_BOND_AMOUNT);
+            assert_eq!(TenantBondManager::total_bonded(&env), MIN_BOND_AMOUNT);
+        });
     }
 
     #[test]
     fn test_lock_rejects_below_minimum() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         let tenant = Address::generate(&env);
 
-        let result = TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT - 1);
-        assert_eq!(result, Err(BondError::InvalidBondAmount));
+        env.as_contract(&contract_id, || {
+            let result = TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT - 1);
+            assert_eq!(result, Err(BondError::InvalidBondAmount));
+        });
     }
 
     #[test]
     fn test_lock_rejects_above_maximum() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         let tenant = Address::generate(&env);
 
-        let result = TenantBondManager::lock_tenant_bond(&env, &tenant, MAX_BOND_AMOUNT + 1);
-        assert_eq!(result, Err(BondError::InvalidBondAmount));
+        env.as_contract(&contract_id, || {
+            let result = TenantBondManager::lock_tenant_bond(&env, &tenant, MAX_BOND_AMOUNT + 1);
+            assert_eq!(result, Err(BondError::InvalidBondAmount));
+        });
     }
 
     #[test]
     fn test_lock_rejects_duplicate_bond() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         let tenant = Address::generate(&env);
 
-        TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT)
-            .expect("first lock should succeed");
+        env.as_contract(&contract_id, || {
+            TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT)
+                .expect("first lock should succeed");
 
-        let result = TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT);
-        assert_eq!(result, Err(BondError::BondAlreadyExists));
+            let result = TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT);
+            assert_eq!(result, Err(BondError::BondAlreadyExists));
+        });
     }
 
     // ---------------------------------------------------------------------------
@@ -352,68 +365,84 @@ mod tests {
     #[test]
     fn test_unlock_rejects_missing_bond() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         let tenant = Address::generate(&env);
 
-        let result = TenantBondManager::unlock_tenant_bond(&env, &tenant);
-        assert_eq!(result, Err(BondError::BondNotFound));
+        env.as_contract(&contract_id, || {
+            let result = TenantBondManager::unlock_tenant_bond(&env, &tenant);
+            assert_eq!(result, Err(BondError::BondNotFound));
+        });
     }
 
     #[test]
     fn test_unlock_rejects_before_lock_duration() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         let tenant = Address::generate(&env);
 
-        TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT)
-            .expect("lock should succeed");
+        env.as_contract(&contract_id, || {
+            TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT)
+                .expect("lock should succeed");
 
-        // Attempt unlock immediately (lock duration not elapsed)
-        let result = TenantBondManager::unlock_tenant_bond(&env, &tenant);
-        assert_eq!(result, Err(BondError::LockDurationNotElapsed));
+            // Attempt unlock immediately (lock duration not elapsed)
+            let result = TenantBondManager::unlock_tenant_bond(&env, &tenant);
+            assert_eq!(result, Err(BondError::LockDurationNotElapsed));
+        });
     }
 
     #[test]
     fn test_unlock_succeeds_after_lock_duration() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         let tenant = Address::generate(&env);
 
-        TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT)
-            .expect("lock should succeed");
+        env.as_contract(&contract_id, || {
+            TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT)
+                .expect("lock should succeed");
+        });
 
         // Advance ledger time past the minimum lock duration
         env.ledger().with_mut(|l| {
             l.timestamp = MIN_LOCK_DURATION + 1;
         });
 
-        let unlocked = TenantBondManager::unlock_tenant_bond(&env, &tenant)
-            .expect("unlock should succeed");
-        assert_eq!(unlocked, MIN_BOND_AMOUNT);
+        env.as_contract(&contract_id, || {
+            let unlocked = TenantBondManager::unlock_tenant_bond(&env, &tenant)
+                .expect("unlock should succeed");
+            assert_eq!(unlocked, MIN_BOND_AMOUNT);
 
-        // Bond should now be marked as unlocked
-        let entry = TenantBondManager::get_bond(&env, &tenant).expect("entry should exist");
-        assert!(!entry.is_locked);
+            // Bond should now be marked as unlocked
+            let entry = TenantBondManager::get_bond(&env, &tenant).expect("entry should exist");
+            assert!(!entry.is_locked);
 
-        // Total bonded should be zero
-        assert_eq!(TenantBondManager::total_bonded(&env), 0);
+            // Total bonded should be zero
+            assert_eq!(TenantBondManager::total_bonded(&env), 0);
+        });
     }
 
     #[test]
     fn test_unlock_rejects_already_unlocked() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         let tenant = Address::generate(&env);
 
-        TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT)
-            .expect("lock should succeed");
+        env.as_contract(&contract_id, || {
+            TenantBondManager::lock_tenant_bond(&env, &tenant, MIN_BOND_AMOUNT)
+                .expect("lock should succeed");
+        });
 
         env.ledger().with_mut(|l| {
             l.timestamp = MIN_LOCK_DURATION + 1;
         });
 
-        TenantBondManager::unlock_tenant_bond(&env, &tenant)
-            .expect("first unlock should succeed");
+        env.as_contract(&contract_id, || {
+            TenantBondManager::unlock_tenant_bond(&env, &tenant)
+                .expect("first unlock should succeed");
 
-        // Second unlock attempt should fail
-        let result = TenantBondManager::unlock_tenant_bond(&env, &tenant);
-        assert_eq!(result, Err(BondError::BondNotLocked));
+            // Second unlock attempt should fail
+            let result = TenantBondManager::unlock_tenant_bond(&env, &tenant);
+            assert_eq!(result, Err(BondError::BondNotLocked));
+        });
     }
 
     // ---------------------------------------------------------------------------
@@ -428,41 +457,47 @@ mod tests {
     #[test]
     fn test_invariant_total_bonded_equals_sum_of_active_bonds() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         const N: usize = 100;
         let mut tenants: Vec<Address> = Vec::with_capacity(N);
         let amount: i128 = 500; // within [MIN_BOND_AMOUNT, MAX_BOND_AMOUNT]
 
-        // Lock bonds for N tenants
-        for _ in 0..N {
-            let tenant = Address::generate(&env);
-            TenantBondManager::lock_tenant_bond(&env, &tenant, amount)
-                .expect("lock should succeed");
-            tenants.push(tenant);
-        }
+        // Batch all lock operations in a single as_contract call to stay
+        // under the Soroban host budget limit.
+        env.as_contract(&contract_id, || {
+            for _ in 0..N {
+                let tenant = Address::generate(&env);
+                TenantBondManager::lock_tenant_bond(&env, &tenant, amount)
+                    .expect("lock should succeed");
+                tenants.push(tenant);
+            }
+        });
 
         // Advance time past lock duration
         env.ledger().with_mut(|l| {
             l.timestamp = MIN_LOCK_DURATION + 1;
         });
 
-        // Verify invariant before unlocking: totalBonded == sum(activeBonds)
-        let total = TenantBondManager::total_bonded(&env);
-        assert_eq!(total, amount * N as i128, "invariant broken before unlock");
+        // Verify invariant before unlocking, then unlock all tenants in a
+        // single as_contract call to stay under the host budget.
+        env.as_contract(&contract_id, || {
+            let total = TenantBondManager::total_bonded(&env);
+            assert_eq!(total, amount * N as i128, "invariant broken before unlock");
 
-        // Unlock all tenants one by one and verify invariant at each step
-        for (i, tenant) in tenants.iter().enumerate() {
-            TenantBondManager::unlock_tenant_bond(&env, tenant)
-                .expect("unlock should succeed");
+            for (i, tenant) in tenants.iter().enumerate() {
+                TenantBondManager::unlock_tenant_bond(&env, tenant)
+                    .expect("unlock should succeed");
 
-            let expected_remaining = amount * (N - i - 1) as i128;
-            let actual_total = TenantBondManager::total_bonded(&env);
-            assert_eq!(
-                actual_total, expected_remaining,
-                "invariant broken at step {i}: totalBonded={actual_total}, expected={expected_remaining}"
-            );
-        }
+                let expected_remaining = amount * (N - i - 1) as i128;
+                let actual_total = TenantBondManager::total_bonded(&env);
+                assert_eq!(
+                    actual_total, expected_remaining,
+                    "invariant broken at step {i}: totalBonded={actual_total}, expected={expected_remaining}"
+                );
+            }
 
-        assert_eq!(TenantBondManager::total_bonded(&env), 0, "pool should be empty");
+            assert_eq!(TenantBondManager::total_bonded(&env), 0, "pool should be empty");
+        });
     }
 
     /// Simulate 100 reentrant call patterns: verify the reentrancy guard
@@ -474,16 +509,19 @@ mod tests {
     #[test]
     fn test_reentrancy_guard_prevents_reentry_100_patterns() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
 
         for pattern in 0..100u32 {
             // Attempt to acquire a guard while one is already active.
             // We test this by directly exercising the guard rather than
             // going through TenantBondManager, as Soroban's WASM sandbox
             // serializes all external calls.
-            let guard_acquired = std::panic::catch_unwind(|| {
-                let _guard1 = ReentrancyGuard::new(&env);
-                // Inner guard should panic
-                let _guard2 = ReentrancyGuard::new(&env);
+            let guard_acquired = env.as_contract(&contract_id, || {
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    let _guard1 = ReentrancyGuard::new(&env);
+                    // Inner guard should panic
+                    let _guard2 = ReentrancyGuard::new(&env);
+                }))
             });
 
             assert!(
@@ -491,10 +529,12 @@ mod tests {
                 "reentrant pattern {pattern}: guard should have rejected double entry"
             );
 
-            // The outer guard dropped in the catch_unwind, so the flag is cleared.
-            // Verify we can enter again after the guard is released.
-            let sequential_ok = std::panic::catch_unwind(|| {
-                let _g = ReentrancyGuard::new(&env);
+            // The outer guard, having panicked inside catch_unwind, dropped
+            // its storage entry. Verify we can enter again after release.
+            let sequential_ok = env.as_contract(&contract_id, || {
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    let _g = ReentrancyGuard::new(&env);
+                }))
             });
             assert!(
                 sequential_ok.is_ok(),
@@ -510,46 +550,57 @@ mod tests {
     #[test]
     fn test_claim_slashed_bond_succeeds() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         let tenant = Address::generate(&env);
 
-        TenantBondManager::lock_tenant_bond(&env, &tenant, 1000)
-            .expect("lock should succeed");
+        env.as_contract(&contract_id, || {
+            TenantBondManager::lock_tenant_bond(&env, &tenant, 1000)
+                .expect("lock should succeed");
 
-        let claimed = TenantBondManager::claim_slashed_bond(&env, &tenant)
-            .expect("claim should succeed");
-        assert_eq!(claimed, 1000);
+            let claimed = TenantBondManager::claim_slashed_bond(&env, &tenant)
+                .expect("claim should succeed");
+            assert_eq!(claimed, 1000);
 
-        let entry = TenantBondManager::get_bond(&env, &tenant).expect("entry should exist");
-        assert!(!entry.is_locked);
-        assert_eq!(entry.amount, 0);
-        assert_eq!(TenantBondManager::total_bonded(&env), 0);
+            let entry = TenantBondManager::get_bond(&env, &tenant).expect("entry should exist");
+            assert!(!entry.is_locked);
+            assert_eq!(entry.amount, 0);
+            assert_eq!(TenantBondManager::total_bonded(&env), 0);
+        });
     }
 
     #[test]
     fn test_claim_slashed_bond_rejects_missing_bond() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         let tenant = Address::generate(&env);
 
-        let result = TenantBondManager::claim_slashed_bond(&env, &tenant);
-        assert_eq!(result, Err(BondError::BondNotFound));
+        env.as_contract(&contract_id, || {
+            let result = TenantBondManager::claim_slashed_bond(&env, &tenant);
+            assert_eq!(result, Err(BondError::BondNotFound));
+        });
     }
 
     #[test]
     fn test_claim_slashed_bond_rejects_already_unlocked() {
         let env = Env::default();
+        let contract_id = env.register_contract(None, SoroSusu);
         let tenant = Address::generate(&env);
 
-        TenantBondManager::lock_tenant_bond(&env, &tenant, 500)
-            .expect("lock should succeed");
+        env.as_contract(&contract_id, || {
+            TenantBondManager::lock_tenant_bond(&env, &tenant, 500)
+                .expect("lock should succeed");
+        });
 
         env.ledger().with_mut(|l| {
             l.timestamp = MIN_LOCK_DURATION + 1;
         });
 
-        TenantBondManager::unlock_tenant_bond(&env, &tenant)
-            .expect("unlock should succeed");
+        env.as_contract(&contract_id, || {
+            TenantBondManager::unlock_tenant_bond(&env, &tenant)
+                .expect("unlock should succeed");
 
-        let result = TenantBondManager::claim_slashed_bond(&env, &tenant);
-        assert_eq!(result, Err(BondError::BondNotLocked));
+            let result = TenantBondManager::claim_slashed_bond(&env, &tenant);
+            assert_eq!(result, Err(BondError::BondNotLocked));
+        });
     }
 }
