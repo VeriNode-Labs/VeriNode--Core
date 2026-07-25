@@ -45,6 +45,14 @@ pub mod mempool;
 // a reentrancy guard to prevent bond pool drainage via ERC-20 callback attacks.
 pub mod pool_manager;
 
+// Distributed tracing with OpenTelemetry-compatible event emission (issue #64).
+// Provides trace context propagation through Soroban contract events, enabling
+// off-chain correlation of cross-contract call flows. Events are published as
+// Soroban `#[contractevent]` structs with trace_id, span_id, parent_span_id,
+// operation_name, duration_ms, and status — compatible with OpenTelemetry
+// span semantics for ingestion by observability pipelines.
+pub mod tracing;
+
 // --- ERROR CODES ---
 
 #[contracterror]

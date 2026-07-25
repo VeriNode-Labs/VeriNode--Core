@@ -295,7 +295,7 @@ impl TenantBondManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{testutils::Address as _, Env};
+    use soroban_sdk::testutils::{Address as _, Ledger};
 
     // ---------------------------------------------------------------------------
     // Lock tests
@@ -480,11 +480,11 @@ mod tests {
             // We test this by directly exercising the guard rather than
             // going through TenantBondManager, as Soroban's WASM sandbox
             // serializes all external calls.
-            let guard_acquired = std::panic::catch_unwind(|| {
+            let guard_acquired = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let _guard1 = ReentrancyGuard::new(&env);
                 // Inner guard should panic
                 let _guard2 = ReentrancyGuard::new(&env);
-            });
+            }));
 
             assert!(
                 guard_acquired.is_err(),
@@ -493,9 +493,9 @@ mod tests {
 
             // The outer guard dropped in the catch_unwind, so the flag is cleared.
             // Verify we can enter again after the guard is released.
-            let sequential_ok = std::panic::catch_unwind(|| {
+            let sequential_ok = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let _g = ReentrancyGuard::new(&env);
-            });
+            }));
             assert!(
                 sequential_ok.is_ok(),
                 "pattern {pattern}: guard should allow entry after release"
