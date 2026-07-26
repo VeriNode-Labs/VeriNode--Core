@@ -53,6 +53,12 @@ pub mod pool_manager;
 // span semantics for ingestion by observability pipelines.
 pub mod tracing;
 
+// Incident response runbook automation with PagerDuty event preparation (issue #88).
+// The module is side-effect free so operators can serialize and deliver events
+// from hardened off-chain automation while keeping protocol critical paths under
+// the 100ms P99 target.
+pub mod incident_response;
+
 // --- ERROR CODES ---
 
 #[contracterror]
