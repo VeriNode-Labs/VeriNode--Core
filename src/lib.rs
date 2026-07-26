@@ -53,6 +53,9 @@ pub mod pool_manager;
 // span semantics for ingestion by observability pipelines.
 pub mod tracing;
 
+// System-wide configuration management with schema validation and hot reload.
+pub mod config;
+
 // --- ERROR CODES ---
 
 #[contracterror]
