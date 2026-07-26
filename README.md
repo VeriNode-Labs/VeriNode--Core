@@ -30,5 +30,18 @@ cargo build --target wasm32-unknown-unknown --release
 cargo test
 ```
 
+
+## ✅ Continuous Integration
+
+The Rust CI workflow builds the workspace, runs the full test suite, and enforces a minimum line coverage threshold before a pull request can merge. Coverage is generated with `cargo-llvm-cov` and the workflow fails when line coverage is below the `COVERAGE_THRESHOLD` value configured in `.github/workflows/rust.yml` (currently 80%).
+
+To check the same threshold locally, install `cargo-llvm-cov` and run:
+
+```bash
+rustup component add llvm-tools-preview
+cargo install cargo-llvm-cov
+cargo llvm-cov --workspace --all-targets --locked --fail-under-lines 80 --summary-only
+```
+
 ## 🤝 Contributing
 Contributions are highly welcome. Please ensure your commits are cryptographically signed using GPG or SSH keys. For major structural changes, please open an issue first to discuss your proposal.
