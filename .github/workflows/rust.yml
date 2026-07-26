@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  COVERAGE_THRESHOLD: "80"
 
 jobs:
   test:
@@ -19,12 +20,29 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+          components: llvm-tools-preview
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo registry and build output
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
           
       - name: Build
         run: cargo build --verbose
         
       - name: Run tests
         run: cargo test --verbose
+
+      - name: Enforce code coverage threshold
+        run: |
+          cargo llvm-cov clean --workspace
+          cargo llvm-cov --workspace \
+            --all-targets \
+            --locked \
+            --fail-under-lines "$COVERAGE_THRESHOLD" \
+            --summary-only
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -33,4 +51,3 @@ jobs:
 
       - name: Run Storage Layout Collision Check
         run: python scripts/storage-layout-check.py
-
