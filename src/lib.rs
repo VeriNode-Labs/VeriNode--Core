@@ -24,6 +24,8 @@ pub mod consensus;
 // transition so exit processing is reproducible across clients.
 pub mod state;
 pub mod validator;
+// System-wide cache primitives with configurable TTL and Redis-ready
+// deployment settings for off-chain services.
 pub mod db;
 
 // Batch bond-settlement via Merkle-proof commit-reveal (issue #57).
