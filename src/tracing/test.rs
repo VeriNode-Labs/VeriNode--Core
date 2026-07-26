@@ -4,7 +4,7 @@ extern crate alloc;
 
 use super::*;
 use crate::SoroSusu;
-use soroban_sdk::testutils::{Address as AddressTestUtilsTrait, Ledger};
+use soroban_sdk::testutils::Ledger;
 use soroban_sdk::Address;
 
 fn setup_tracer(env: &Env) -> (Tracer, Address) {
@@ -42,7 +42,10 @@ fn test_start_span_creates_span() {
         assert_eq!(span.span_id, SpanId(1));
         assert_eq!(span.trace_id, TraceId(42));
         assert_eq!(span.parent_span_id, SpanId(0));
-        assert_eq!(span.operation_name, String::from_str(&env, "test_operation"));
+        assert_eq!(
+            span.operation_name,
+            String::from_str(&env, "test_operation")
+        );
         assert_eq!(span.start_timestamp, 1000);
     });
 }
@@ -131,4 +134,66 @@ fn test_end_span_with_duration() {
         let span = tracer.start_span(&env, "measured_op", SpanId(0), &[]);
         tracer.end_span_with_duration(&env, span, "ok", 150);
     });
+}
+
+#[test]
+fn test_semantic_convention_attribute_encoding() {
+    let attrs = encode_attributes(&[
+        (semconv::SERVICE_NAME, "verinode-core"),
+        (semconv::EVENT_NAME, "validator.activation"),
+        (semconv::VERINODE_CRITICAL_PATH, "true"),
+    ]);
+
+    assert_eq!(
+        attrs,
+        "service.name=verinode-core,event.name=validator.activation,verinode.critical_path=true"
+    );
+}
+
+#[test]
+fn test_structured_logger_emits_otel_log_record() {
+    let env = Env::default();
+    env.mock_all_auths();
+    env.ledger().set_timestamp(1234);
+    let contract_id = env.register_contract(None, SoroSusu);
+
+    env.as_contract(&contract_id, || {
+        let record = StructuredLogger::emit(
+            &env,
+            TraceId(99),
+            SpanId(7),
+            LogSeverity::Warn,
+            "validator queue depth high",
+            &[
+                (semconv::SERVICE_NAME, "verinode-core"),
+                (semconv::CODE_NAMESPACE, "validator"),
+            ],
+        );
+
+        assert_eq!(record.trace_id, TraceId(99));
+        assert_eq!(record.span_id, SpanId(7));
+        assert_eq!(record.timestamp, 1234);
+        assert_eq!(record.observed_timestamp, 1234);
+        assert_eq!(record.severity_text, String::from_str(&env, "WARN"));
+        assert_eq!(record.severity_number, 13);
+        assert_eq!(
+            record.body,
+            String::from_str(&env, "validator queue depth high")
+        );
+        assert_eq!(
+            record.attributes,
+            String::from_str(&env, "service.name=verinode-core,code.namespace=validator")
+        );
+    });
+}
+
+#[test]
+fn test_critical_path_attributes() {
+    assert_eq!(
+        critical_path_attributes("mempool"),
+        [
+            (semconv::VERINODE_CRITICAL_PATH, "true"),
+            (semconv::VERINODE_COMPONENT, "mempool"),
+        ]
+    );
 }
