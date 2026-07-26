@@ -53,6 +53,12 @@ pub mod pool_manager;
 // span semantics for ingestion by observability pipelines.
 pub mod tracing;
 
+// Runtime configuration auditing and drift detection (issue #87).
+// Provides deterministic baseline hashing, per-service snapshot comparison,
+// critical-drift rollout gates, and alert-ready audit reports for blue-green
+// and canary deployment controllers.
+pub mod config_audit;
+
 // --- ERROR CODES ---
 
 #[contracterror]
