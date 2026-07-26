@@ -1,95 +1,157 @@
 #![cfg(test)]
 
+use sorosusu_contracts::rate_limit::{
+    RateLimitConfig, RateLimitDecision, TenantRateLimiter, AVAILABILITY_TARGET_BPS,
+    CRITICAL_PATH_P99_BUDGET_MS, DEFAULT_BURST_CAPACITY, DEFAULT_REFILL_RATE_PER_SECOND,
+};
+
 #[test]
-fn test_rate_limit_enforcement() {
-    // Simulate timestamps
-    let first_creation_time: u64 = 1000;
-    let second_creation_time: u64 = 1200; // 200 seconds later (< 5 minutes)
-    let third_creation_time: u64 = 1400; // 400 seconds after first (> 5 minutes)
-    
-    const RATE_LIMIT_SECONDS: u64 = 300; // 5 minutes
-    
-    // Test case 1: Second creation within 5 minutes should fail
-    let time_elapsed_1 = second_creation_time.saturating_sub(first_creation_time);
-    assert!(time_elapsed_1 < RATE_LIMIT_SECONDS);
-    
-    // Test case 2: Third creation after 5 minutes should succeed
-    let time_elapsed_2 = third_creation_time.saturating_sub(first_creation_time);
-    assert!(time_elapsed_2 >= RATE_LIMIT_SECONDS);
+fn token_bucket_enforces_per_tenant_burst_capacity() {
+    let config = RateLimitConfig::new(3, 1).unwrap();
+    let mut limiter = TenantRateLimiter::new(config);
+
+    assert_eq!(
+        limiter.check(42, 1_000, 1),
+        RateLimitDecision::Allowed {
+            remaining_tokens: 2
+        }
+    );
+    assert_eq!(
+        limiter.check(42, 1_000, 2),
+        RateLimitDecision::Allowed {
+            remaining_tokens: 0
+        }
+    );
+    assert_eq!(
+        limiter.check(42, 1_000, 1),
+        RateLimitDecision::Denied {
+            retry_after_seconds: 1
+        }
+    );
 }
 
 #[test]
-fn test_rate_limit_exact_boundary() {
-    let first_creation: u64 = 1000;
-    let exactly_5_min_later: u64 = 1300; // Exactly 300 seconds
-    
-    const RATE_LIMIT_SECONDS: u64 = 300;
-    
-    let time_elapsed = exactly_5_min_later.saturating_sub(first_creation);
-    
-    // At exactly 5 minutes, should be allowed
-    assert_eq!(time_elapsed, RATE_LIMIT_SECONDS);
-    assert!(time_elapsed >= RATE_LIMIT_SECONDS);
+fn tenants_have_independent_buckets() {
+    let config = RateLimitConfig::new(2, 1).unwrap();
+    let mut limiter = TenantRateLimiter::new(config);
+
+    assert!(matches!(
+        limiter.check(1, 10, 2),
+        RateLimitDecision::Allowed {
+            remaining_tokens: 0
+        }
+    ));
+    assert!(matches!(
+        limiter.check(1, 10, 1),
+        RateLimitDecision::Denied { .. }
+    ));
+
+    assert_eq!(
+        limiter.check(2, 10, 1),
+        RateLimitDecision::Allowed {
+            remaining_tokens: 1
+        },
+        "tenant 2 must not inherit tenant 1 throttling state"
+    );
 }
 
 #[test]
-fn test_rate_limit_multiple_users() {
-    // Different users should have independent rate limits
-    struct UserCreation {
-        user_id: u32,
-        timestamp: u64,
-    }
-    
-    let creations = vec![
-        UserCreation { user_id: 1, timestamp: 1000 },
-        UserCreation { user_id: 2, timestamp: 1100 }, // Different user, should be allowed
-        UserCreation { user_id: 1, timestamp: 1200 }, // Same user within 5 min, should fail
-        UserCreation { user_id: 2, timestamp: 1250 }, // User 2 within their 5 min, should fail
-        UserCreation { user_id: 1, timestamp: 1301 }, // User 1 after 5 min, should succeed
-    ];
-    
-    const RATE_LIMIT_SECONDS: u64 = 300;
-    
-    // User 1: First creation at 1000
-    let user1_first = 1000u64;
-    let user1_second = 1200u64;
-    let user1_third = 1301u64;
-    
-    assert!(user1_second.saturating_sub(user1_first) < RATE_LIMIT_SECONDS);
-    assert!(user1_third.saturating_sub(user1_first) >= RATE_LIMIT_SECONDS);
-    
-    // User 2: First creation at 1100
-    let user2_first = 1100u64;
-    let user2_second = 1250u64;
-    
-    assert!(user2_second.saturating_sub(user2_first) < RATE_LIMIT_SECONDS);
+fn refill_is_capped_at_burst_capacity() {
+    let config = RateLimitConfig::new(5, 2).unwrap();
+    let mut limiter = TenantRateLimiter::new(config);
+
+    assert_eq!(
+        limiter.check(7, 100, 5),
+        RateLimitDecision::Allowed {
+            remaining_tokens: 0
+        }
+    );
+    assert_eq!(
+        limiter.check(7, 101, 1),
+        RateLimitDecision::Allowed {
+            remaining_tokens: 1
+        }
+    );
+    assert_eq!(
+        limiter.check(7, 200, 5),
+        RateLimitDecision::Allowed {
+            remaining_tokens: 0
+        },
+        "long idle periods refill only to burst capacity"
+    );
 }
 
 #[test]
-fn test_saturating_sub_no_underflow() {
-    // Test that saturating_sub prevents underflow
-    let current_time: u64 = 100;
-    let future_time: u64 = 200; // This shouldn't happen, but test safety
-    
-    let result = current_time.saturating_sub(future_time);
-    assert_eq!(result, 0); // Should saturate to 0, not underflow
+fn retry_after_rounds_up_missing_tokens() {
+    let config = RateLimitConfig::new(10, 3).unwrap();
+    let mut limiter = TenantRateLimiter::new(config);
+
+    assert!(matches!(
+        limiter.check(9, 50, 10),
+        RateLimitDecision::Allowed {
+            remaining_tokens: 0
+        }
+    ));
+    assert_eq!(
+        limiter.check(9, 50, 7),
+        RateLimitDecision::Denied {
+            retry_after_seconds: 3
+        },
+        "7 missing tokens at 3 tokens/sec needs ceil(7/3) seconds"
+    );
 }
 
 #[test]
-fn test_rate_limit_after_long_period() {
-    let first_creation: u64 = 1000;
-    let one_day_later: u64 = 1000 + (24 * 60 * 60); // 86400 seconds later
-    
-    const RATE_LIMIT_SECONDS: u64 = 300;
-    
-    let time_elapsed = one_day_later.saturating_sub(first_creation);
-    assert!(time_elapsed >= RATE_LIMIT_SECONDS);
+fn saturating_time_math_handles_clock_regression() {
+    let config = RateLimitConfig::new(2, 1).unwrap();
+    let mut limiter = TenantRateLimiter::new(config);
+
+    assert!(matches!(
+        limiter.check(11, 200, 2),
+        RateLimitDecision::Allowed {
+            remaining_tokens: 0
+        }
+    ));
+    assert_eq!(
+        limiter.check(11, 100, 1),
+        RateLimitDecision::Denied {
+            retry_after_seconds: 1
+        },
+        "older timestamps must not underflow and grant unexpected refill"
+    );
 }
 
 #[test]
-fn test_rate_limit_constants() {
-    const RATE_LIMIT_SECONDS: u64 = 300;
-    const EXPECTED_MINUTES: u64 = 5;
-    
-    assert_eq!(RATE_LIMIT_SECONDS, EXPECTED_MINUTES * 60);
+fn metrics_and_snapshots_support_monitoring_dashboards() {
+    let config = RateLimitConfig::new(2, 1).unwrap();
+    let mut limiter = TenantRateLimiter::new(config);
+
+    limiter.check(1, 10, 1);
+    limiter.check(1, 10, 2);
+    limiter.check(2, 10, 1);
+
+    let tenant_one = limiter.snapshot(1).unwrap();
+    assert_eq!(tenant_one.tenant_id, 1);
+    assert_eq!(tenant_one.available_tokens, 1);
+    assert_eq!(tenant_one.accepted_requests, 1);
+    assert_eq!(tenant_one.rejected_requests, 1);
+
+    let metrics = limiter.metrics();
+    assert_eq!(metrics.tenants_tracked, 2);
+    assert_eq!(metrics.accepted_requests, 2);
+    assert_eq!(metrics.rejected_requests, 1);
+}
+
+#[test]
+fn rejects_invalid_configuration() {
+    assert_eq!(RateLimitConfig::new(0, 1), None);
+    assert_eq!(RateLimitConfig::new(1, 0), None);
+}
+
+#[test]
+fn issue_73_operational_constants_are_documented() {
+    assert_eq!(DEFAULT_REFILL_RATE_PER_SECOND, 100);
+    assert_eq!(DEFAULT_BURST_CAPACITY, 1_000);
+    assert_eq!(CRITICAL_PATH_P99_BUDGET_MS, 100);
+    assert_eq!(AVAILABILITY_TARGET_BPS, 9_999);
 }
