@@ -53,6 +53,12 @@ pub mod pool_manager;
 // span semantics for ingestion by observability pipelines.
 pub mod tracing;
 
+// Multi-region replication and disaster recovery readiness (issue #91).
+// Provides deterministic topology validation, failover planning, canary
+// release gates, DR test reports, and dashboard snapshots for off-chain
+// operators without adding runtime dependencies.
+pub mod replication;
+
 // --- ERROR CODES ---
 
 #[contracterror]
