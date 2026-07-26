@@ -53,6 +53,11 @@ pub mod pool_manager;
 // span semantics for ingestion by observability pipelines.
 pub mod tracing;
 
+// Service Level Objective monitoring with burn-rate alerts (issue #89).
+// Shared by services, canaries, dashboards, and runbooks to enforce the
+// 99.99% availability and <100ms P99 critical-path objectives.
+pub mod slo;
+
 // --- ERROR CODES ---
 
 #[contracterror]
