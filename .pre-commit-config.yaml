@@ -1,0 +1,46 @@
+# Install with: pipx install pre-commit && pre-commit install
+# Run all checks locally with: pre-commit run --all-files
+minimum_pre_commit_version: "3.5.0"
+
+repos:
+  - repo: local
+    hooks:
+      - id: rustfmt
+        name: Rust formatting
+        entry: scripts/pre-commit-quality.sh rustfmt
+        language: system
+        types_or: [rust]
+
+      - id: cargo-check
+        name: Rust compile check
+        entry: cargo check --all-targets --all-features
+        language: system
+        pass_filenames: false
+        types_or: [rust]
+
+      - id: cargo-clippy
+        name: Rust clippy lints
+        entry: cargo clippy --all-targets --all-features
+        language: system
+        pass_filenames: false
+        types_or: [rust]
+
+      - id: storage-layout-collision-check
+        name: Storage layout collision check
+        entry: python scripts/storage-layout-check.py
+        language: system
+        pass_filenames: false
+        files: ^(src/proxy/.*|scripts/storage-layout-check\.py)$
+
+      - id: repository-hygiene
+        name: Repository hygiene checks
+        entry: scripts/pre-commit-quality.sh hygiene
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: docs-whitespace
+        name: Markdown and config whitespace
+        entry: scripts/pre-commit-quality.sh whitespace
+        language: system
+        types_or: [markdown, yaml, toml, json]
