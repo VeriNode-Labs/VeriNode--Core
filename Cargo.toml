@@ -41,3 +41,7 @@ path = "tests/crypto/dkg_serialization_roundtrip_test.rs"
 [[test]]
 name = "proof_of_connectivity_epoch_nonce_test"
 path = "tests/attestation/proof_of_connectivity_epoch_nonce_test.rs"
+
+[[test]]
+name = "balance_underflow_test"
+path = "tests/validator/balance_underflow_test.rs"
