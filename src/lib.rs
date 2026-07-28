@@ -53,11 +53,11 @@ pub mod pool_manager;
 // span semantics for ingestion by observability pipelines.
 pub mod tracing;
 
-// Runtime configuration auditing and drift detection (issue #87).
-// Provides deterministic baseline hashing, per-service snapshot comparison,
-// critical-drift rollout gates, and alert-ready audit reports for blue-green
-// and canary deployment controllers.
-pub mod config_audit;
+// Incident response runbook automation with PagerDuty event preparation (issue #88).
+// The module is side-effect free so operators can serialize and deliver events
+// from hardened off-chain automation while keeping protocol critical paths under
+// the 100ms P99 target.
+pub mod incident_response;
 
 // --- ERROR CODES ---
 
