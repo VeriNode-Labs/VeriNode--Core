@@ -24,8 +24,6 @@ pub mod consensus;
 // transition so exit processing is reproducible across clients.
 pub mod state;
 pub mod validator;
-// System-wide cache primitives with configurable TTL and Redis-ready
-// deployment settings for off-chain services.
 pub mod db;
 
 // Batch bond-settlement via Merkle-proof commit-reveal (issue #57).
@@ -47,17 +45,16 @@ pub mod mempool;
 // a reentrancy guard to prevent bond pool drainage via ERC-20 callback attacks.
 pub mod pool_manager;
 
-// Distributed tracing and structured logging with OpenTelemetry-compatible
-// event emission (issues #64 and #74). Provides trace context propagation plus
-// log records carrying OTel severity fields and semantic-convention
-// attributes, enabling off-chain correlation, alerting, and dashboard ingestion
-// without adding storage writes on critical paths.
+// Distributed tracing with OpenTelemetry-compatible event emission (issue #64).
+// Provides trace context propagation through Soroban contract events, enabling
+// off-chain correlation of cross-contract call flows. Events are published as
+// Soroban `#[contractevent]` structs with trace_id, span_id, parent_span_id,
+// operation_name, duration_ms, and status — compatible with OpenTelemetry
+// span semantics for ingestion by observability pipelines.
 pub mod tracing;
 
-// API rate limiting with per-tenant token buckets (issue #73).
-// Provides an embeddable limiter plus metrics snapshots for gateways,
-// monitoring, and canary analysis without introducing runtime dependencies.
-pub mod rate_limit;
+// System-wide configuration management with schema validation and hot reload.
+pub mod config;
 
 // --- ERROR CODES ---
 
