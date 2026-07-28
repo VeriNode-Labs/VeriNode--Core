@@ -45,19 +45,15 @@ pub mod mempool;
 // a reentrancy guard to prevent bond pool drainage via ERC-20 callback attacks.
 pub mod pool_manager;
 
-// Distributed tracing with OpenTelemetry-compatible event emission (issue #64).
-// Provides trace context propagation through Soroban contract events, enabling
-// off-chain correlation of cross-contract call flows. Events are published as
-// Soroban `#[contractevent]` structs with trace_id, span_id, parent_span_id,
-// operation_name, duration_ms, and status — compatible with OpenTelemetry
-// span semantics for ingestion by observability pipelines.
-pub mod tracing;
+// State snapshot backup verification with restore testing (issue #70).
+// Scheduled snapshots carry Merkle-style integrity hashes to detect
+// corruption; restore testing verifies that a restored state matches.
+pub mod backup;
 
-// Multi-region replication and disaster recovery readiness (issue #91).
-// Provides deterministic topology validation, failover planning, canary
-// release gates, DR test reports, and dashboard snapshots for off-chain
-// operators without adding runtime dependencies.
-pub mod replication;
+// Webhook delivery service with retry and signature verification (issue #68).
+// Signed, domain-separated outbound payloads are delivered with
+// exponential-backoff retry and verified via BLS signature checks.
+pub mod webhook;
 
 // --- ERROR CODES ---
 

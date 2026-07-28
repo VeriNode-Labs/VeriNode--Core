@@ -14,10 +14,10 @@ testutils = []
 
 [dependencies]
 dlmalloc = { version = "0.2.14", features = ["global"] }
-soroban-sdk = "22.0.0"
+soroban-sdk = "21.0.0"
 
 [dev-dependencies]
-soroban-sdk = { version = "22.0.0", features = ["testutils"] }
+soroban-sdk = { version = "21.0.0", features = ["testutils"] }
 arbitrary = { version = "=1.3.2", features = ["derive"] }
 proptest = "1.4"
 
@@ -43,5 +43,9 @@ name = "proof_of_connectivity_epoch_nonce_test"
 path = "tests/attestation/proof_of_connectivity_epoch_nonce_test.rs"
 
 [[test]]
-name = "balance_underflow_test"
-path = "tests/validator/balance_underflow_test.rs"
+name = "backup_verification_test"
+path = "tests/backup_verification_test.rs"
+
+[[test]]
+name = "webhook_delivery_test"
+path = "tests/webhook_delivery_test.rs"

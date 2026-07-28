@@ -69,37 +69,50 @@ impl<'a> Drop for ReentrancyGuard<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::SoroSusu;
     use soroban_sdk::Env;
 
     #[test]
     fn test_reentrancy_guard_allows_first_call() {
         let env = Env::default();
-        let _guard = ReentrancyGuard::new(&env);
-        // Should not panic
+        let contract_id = env.register_contract(None, SoroSusu);
+        env.as_contract(&contract_id, || {
+            let _guard = ReentrancyGuard::new(&env);
+            // Should not panic
+        });
     }
 
     #[test]
     #[should_panic(expected = "ReentrancyGuard: reentrant call")]
     fn test_reentrancy_guard_blocks_reentrant_call() {
         let env = Env::default();
-        let _guard1 = ReentrancyGuard::new(&env);
-        let _guard2 = ReentrancyGuard::new(&env); // Should panic
+        let contract_id = env.register_contract(None, SoroSusu);
+        env.as_contract(&contract_id, || {
+            let _guard1 = ReentrancyGuard::new(&env);
+            let _guard2 = ReentrancyGuard::new(&env); // Should panic
+        });
     }
 
     #[test]
     fn test_reentrancy_guard_allows_after_drop() {
         let env = Env::default();
-        {
-            let _guard = ReentrancyGuard::new(&env);
-        } // Guard dropped here
-        let _guard2 = ReentrancyGuard::new(&env); // Should not panic
+        let contract_id = env.register_contract(None, SoroSusu);
+        env.as_contract(&contract_id, || {
+            {
+                let _guard = ReentrancyGuard::new(&env);
+            } // Guard dropped here
+            let _guard2 = ReentrancyGuard::new(&env); // Should not panic
+        });
     }
 
     #[test]
     fn test_reentrancy_guard_manual_release() {
         let env = Env::default();
-        let guard = ReentrancyGuard::new(&env);
-        guard.release();
-        let _guard2 = ReentrancyGuard::new(&env); // Should not panic
+        let contract_id = env.register_contract(None, SoroSusu);
+        env.as_contract(&contract_id, || {
+            let guard = ReentrancyGuard::new(&env);
+            guard.release();
+            let _guard2 = ReentrancyGuard::new(&env); // Should not panic
+        });
     }
 }
