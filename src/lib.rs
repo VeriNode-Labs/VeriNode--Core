@@ -55,6 +55,11 @@ pub mod pool_manager;
 // span semantics for ingestion by observability pipelines.
 pub mod tracing;
 
+// API rate limiting with per-tenant token buckets (issue #73).
+// Provides an embeddable limiter plus metrics snapshots for gateways,
+// monitoring, and canary analysis without introducing runtime dependencies.
+pub mod rate_limit;
+
 // --- ERROR CODES ---
 
 #[contracterror]
