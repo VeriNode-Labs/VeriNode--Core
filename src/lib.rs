@@ -53,11 +53,10 @@ pub mod pool_manager;
 // span semantics for ingestion by observability pipelines.
 pub mod tracing;
 
-// Incident response runbook automation with PagerDuty event preparation (issue #88).
-// The module is side-effect free so operators can serialize and deliver events
-// from hardened off-chain automation while keeping protocol critical paths under
-// the 100ms P99 target.
-pub mod incident_response;
+// Service Level Objective monitoring with burn-rate alerts (issue #89).
+// Shared by services, canaries, dashboards, and runbooks to enforce the
+// 99.99% availability and <100ms P99 critical-path objectives.
+pub mod slo;
 
 // --- ERROR CODES ---
 
