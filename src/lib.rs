@@ -53,8 +53,10 @@ pub mod pool_manager;
 // span semantics for ingestion by observability pipelines.
 pub mod tracing;
 
-// System-wide configuration management with schema validation and hot reload.
-pub mod config;
+// Staging chaos engineering blueprint (issue #80).
+// Defines the system-wide fault catalog, safety gates, and blue-green/canary
+// rollout progression used by off-chain staging orchestration and runbooks.
+pub mod chaos;
 
 // --- ERROR CODES ---
 
