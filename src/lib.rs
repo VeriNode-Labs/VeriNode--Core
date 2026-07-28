@@ -53,10 +53,11 @@ pub mod pool_manager;
 // span semantics for ingestion by observability pipelines.
 pub mod tracing;
 
-// Service Level Objective monitoring with burn-rate alerts (issue #89).
-// Shared by services, canaries, dashboards, and runbooks to enforce the
-// 99.99% availability and <100ms P99 critical-path objectives.
-pub mod slo;
+// Multi-region replication and disaster recovery readiness (issue #91).
+// Provides deterministic topology validation, failover planning, canary
+// release gates, DR test reports, and dashboard snapshots for off-chain
+// operators without adding runtime dependencies.
+pub mod replication;
 
 // --- ERROR CODES ---
 
