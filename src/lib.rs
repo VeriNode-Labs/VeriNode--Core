@@ -55,6 +55,11 @@ pub mod backup;
 // exponential-backoff retry and verified via BLS signature checks.
 pub mod webhook;
 
+// Distributed job scheduler with lease-based worker claiming (issue #76).
+// Workers acquire exclusive leases on jobs from a priority queue.
+// Expired leases release jobs back for reclamation by other workers.
+pub mod job_scheduler;
+
 // --- ERROR CODES ---
 
 #[contracterror]
