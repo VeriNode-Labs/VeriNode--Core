@@ -55,6 +55,11 @@ pub mod backup;
 // exponential-backoff retry and verified via BLS signature checks.
 pub mod webhook;
 
+// Secret rotation service for database credentials and API keys (issue #79).
+// Versioned credential store with scheduled expiry, dual-ended grace windows,
+// and atomic rotation that keeps old credentials live for in-flight requests.
+pub mod secret_rotation;
+
 // --- ERROR CODES ---
 
 #[contracterror]
