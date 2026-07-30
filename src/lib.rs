@@ -55,6 +55,16 @@ pub mod backup;
 // exponential-backoff retry and verified via BLS signature checks.
 pub mod webhook;
 
+// Runtime configuration auditing and drift detection.
+// Compares approved baselines with runtime snapshots to detect
+// unexpected changes during blue-green or canary rollout gates.
+pub mod config_audit;
+
+// Multi-region replication and disaster-recovery primitives (issue #91).
+// Dependency-free topology management with failover planning,
+// canary analysis, and DR-test reporting.
+pub mod replication;
+
 // Distributed job scheduler with lease-based worker claiming (issue #76).
 // Workers acquire exclusive leases on jobs from a priority queue.
 // Expired leases release jobs back for reclamation by other workers.
