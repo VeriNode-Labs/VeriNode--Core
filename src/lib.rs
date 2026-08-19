@@ -76,6 +76,35 @@ pub mod job_scheduler;
 // system-wide dashboard snapshot.  Fully dependency-free and no_std-compatible.
 pub mod graceful_degradation;
 
+// Incident response runbook automation and PagerDuty event preparation.
+// Deterministic, side-effect-free runbook selection and PagerDuty Events API
+// payload building for blue-green and canary deployment gate decisions.
+pub mod incident_response;
+
+// Per-tenant token-bucket rate limiting for API-facing services (issue #73).
+// Deterministic, dependency-free token bucket with per-tenant isolation,
+// burst capacity, and monitoring snapshots.
+pub mod rate_limit;
+
+// Runtime configuration management with schema validation and hot reload.
+// Validates SystemConfig, enforces monotonic versioning, and gates canary/
+// blue-green rollouts on service-level hot-reload flags.
+pub mod config;
+
+// Service Level Objective monitoring and burn-rate alert helpers.
+// Pure-Rust rolling-window error-budget evaluation shared by all services.
+pub mod slo;
+
+// Staging chaos engineering blueprint primitives.
+// Canonical experiment catalog and safety-gate health snapshot for
+// off-chain staging automation and runbooks.
+pub mod chaos;
+
+// Secret rotation service for database credentials and API keys (issue #79).
+// Versioned credential store with scheduled expiry, dual-ended grace windows,
+// and atomic rotation with in-flight request drain semantics.
+pub mod secret_rotation;
+
 // --- ERROR CODES ---
 
 #[contracterror]

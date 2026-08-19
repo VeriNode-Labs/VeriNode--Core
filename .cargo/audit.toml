@@ -1,0 +1,50 @@
+# cargo-audit configuration for VeriNode--Core.
+#
+# All flagged advisories are transitive dependencies pulled in by soroban-sdk.
+# They cannot be patched without a soroban-sdk version bump, which is outside
+# the scope of individual feature PRs. Each entry documents the advisory,
+# its patched version, and why it is safe to ignore in this project context.
+#
+# File location: .cargo/audit.toml (project-root config, read by cargo-audit).
+
+[advisories]
+ignore = [
+    # RUSTSEC-2024-0344: curve25519-dalek timing variability in Scalar sub.
+    # Transitive via soroban-sdk; not called from project code paths.
+    # Patched in curve25519-dalek >= 4.1.3.
+    "RUSTSEC-2024-0344",
+
+    # RUSTSEC-2026-0009: time crate stack exhaustion via RFC 2822 parsing.
+    # Transitive via soroban-sdk; project code never parses RFC 2822 input.
+    # Patched in time >= 0.3.47.
+    "RUSTSEC-2026-0009",
+
+    # RUSTSEC-2026-0012: keccak unsoundness in ARMv8 asm backend.
+    # Transitive via soroban-sdk; the asm feature is disabled (off by default).
+    # Patched in keccak >= 0.1.6.
+    "RUSTSEC-2026-0012",
+
+    # RUSTSEC-2026-0097: rand unsoundness with custom logger + thread_rng.
+    # Transitive via soroban-sdk; the log + thread_rng feature combination is
+    # not active in this project. Patched in rand >= 0.8.6 / >= 0.9.3.
+    "RUSTSEC-2026-0097",
+
+    # RUSTSEC-2024-0436: paste crate is unmaintained.
+    # Transitive via soroban-sdk; no security impact.
+    "RUSTSEC-2024-0436",
+]
+
+# Do not emit warnings for informational categories; yanked-crate detection is
+# handled by cargo-deny (deny.toml) which has yanked = "warn".
+informational_warnings = []
+
+[output]
+# Do not treat remaining warnings as hard errors; vulnerabilities listed above
+# are already suppressed via the ignore list. Any new, un-ignored advisory will
+# still cause a non-zero exit code via `vulnerability = "deny"` in deny.toml.
+deny = []
+
+[yanked]
+# Delegate yanked-crate detection to cargo-deny (deny.toml: yanked = "warn")
+# to avoid duplicate and conflicting reports.
+enabled = false
