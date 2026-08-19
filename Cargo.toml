@@ -51,5 +51,5 @@ name = "webhook_delivery_test"
 path = "tests/webhook_delivery_test.rs"
 
 [[test]]
-name = "graceful_degradation_test"
-path = "tests/graceful_degradation_test.rs"
+name = "kafka_consumer_lag_test"
+path = "tests/kafka_consumer_lag_test.rs"

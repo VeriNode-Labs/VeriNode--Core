@@ -70,12 +70,6 @@ pub mod replication;
 // Expired leases release jobs back for reclamation by other workers.
 pub mod job_scheduler;
 
-// Graceful degradation with feature flags and capacity shedding (issue #132).
-// Feature-flag registry with security-review gates, capacity-shedding policy
-// with soft/hard thresholds, canary gate for blue-green promotion, and a
-// system-wide dashboard snapshot.  Fully dependency-free and no_std-compatible.
-pub mod graceful_degradation;
-
 // Incident response runbook automation and PagerDuty event preparation.
 // Deterministic, side-effect-free runbook selection and PagerDuty Events API
 // payload building for blue-green and canary deployment gate decisions.
@@ -104,6 +98,13 @@ pub mod chaos;
 // Versioned credential store with scheduled expiry, dual-ended grace windows,
 // and atomic rotation with in-flight request drain semantics.
 pub mod secret_rotation;
+
+// Kafka consumer lag monitoring and auto-scaling consumer groups (issue #131).
+// Deterministic, dependency-free primitives for tracking per-partition consumer
+// lag, evaluating scaling policies, and producing canary-gated scale-out /
+// scale-in decisions.  All math is pure Rust so on-chain contracts, off-chain
+// monitoring agents, and blue-green deployment gates share the same thresholds.
+pub mod kafka_consumer;
 
 // --- ERROR CODES ---
 
