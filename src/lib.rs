@@ -70,6 +70,12 @@ pub mod replication;
 // Expired leases release jobs back for reclamation by other workers.
 pub mod job_scheduler;
 
+// Graceful degradation with feature flags and capacity shedding (issue #132).
+// Feature-flag registry with security-review gates, capacity-shedding policy
+// with soft/hard thresholds, canary gate for blue-green promotion, and a
+// system-wide dashboard snapshot.  Fully dependency-free and no_std-compatible.
+pub mod graceful_degradation;
+
 // --- ERROR CODES ---
 
 #[contracterror]
