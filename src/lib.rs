@@ -106,6 +106,14 @@ pub mod secret_rotation;
 // monitoring agents, and blue-green deployment gates share the same thresholds.
 pub mod kafka_consumer;
 
+// Cross-chain light-client committee synchronization across heterogeneous
+// finality gadgets (issue #136). Derives per-chain sync timeout, sync interval,
+// and clock-drift budget from each chain's block time, verifies finality at the
+// 2/3+1 committee-weight threshold with a sync-drift grace period, and exports
+// a chain_finality_lag_ms gauge per connected chain. Deterministic and
+// dependency-free so on-chain contracts and off-chain relayers share it.
+pub mod cross_chain;
+
 // --- ERROR CODES ---
 
 #[contracterror]
