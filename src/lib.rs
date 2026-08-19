@@ -70,6 +70,13 @@ pub mod replication;
 // Expired leases release jobs back for reclamation by other workers.
 pub mod job_scheduler;
 
+// Kafka consumer lag monitoring and auto-scaling consumer groups (issue #131).
+// Deterministic, dependency-free primitives for tracking per-partition consumer
+// lag, evaluating scaling policies, and producing canary-gated scale-out /
+// scale-in decisions.  All math is pure Rust so on-chain contracts, off-chain
+// monitoring agents, and blue-green deployment gates share the same thresholds.
+pub mod kafka_consumer;
+
 // --- ERROR CODES ---
 
 #[contracterror]

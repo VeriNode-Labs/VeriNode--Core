@@ -49,3 +49,7 @@ path = "tests/backup_verification_test.rs"
 [[test]]
 name = "webhook_delivery_test"
 path = "tests/webhook_delivery_test.rs"
+
+[[test]]
+name = "kafka_consumer_lag_test"
+path = "tests/kafka_consumer_lag_test.rs"
