@@ -33,8 +33,7 @@ impl FinalityVerifier {
     /// Minimum attesting weight required to finalize, given the total committee
     /// weight: `floor(2/3 * total) + 1`.
     pub fn finality_threshold_weight(total_committee_weight: u64) -> u64 {
-        total_committee_weight
-            .saturating_mul(FINALITY_THRESHOLD_NUMERATOR)
+        total_committee_weight.saturating_mul(FINALITY_THRESHOLD_NUMERATOR)
             / FINALITY_THRESHOLD_DENOMINATOR
             + 1
     }

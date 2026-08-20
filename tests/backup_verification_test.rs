@@ -4,8 +4,8 @@
 //! verification, cache eviction, and restore testing.
 
 use sorosusu_contracts::backup::state_snapshot::{
-    BackupScheduler, RestoreResult, SnapshotHealth, StateChunk, StateSnapshot,
-    MAX_SNAPSHOT_COUNT, SNAPSHOT_INTERVAL_SECONDS,
+    BackupScheduler, RestoreResult, SnapshotHealth, StateChunk, StateSnapshot, MAX_SNAPSHOT_COUNT,
+    SNAPSHOT_INTERVAL_SECONDS,
 };
 
 #[test]
@@ -22,7 +22,9 @@ fn test_full_snapshot_lifecycle() {
     ];
 
     // Take snapshot at epoch 42.
-    let snap = scheduler.take_snapshot(42, SNAPSHOT_INTERVAL_SECONDS, &chunks).unwrap();
+    let snap = scheduler
+        .take_snapshot(42, SNAPSHOT_INTERVAL_SECONDS, &chunks)
+        .unwrap();
     assert_eq!(snap.epoch, 42);
     assert_eq!(snap.chunk_count(), 4);
     assert_eq!(snap.verify_integrity(), SnapshotHealth::Healthy);
@@ -49,11 +51,7 @@ fn test_restore_with_matching_state() {
         (30u64, &b"contracts"[..]),
     ];
 
-    let result = sorosusu_contracts::backup::state_snapshot::test_restore(
-        &scheduler,
-        1,
-        &restored,
-    );
+    let result = sorosusu_contracts::backup::state_snapshot::test_restore(&scheduler, 1, &restored);
     assert_eq!(result, RestoreResult::Success);
 }
 
@@ -63,11 +61,8 @@ fn test_restore_detects_corruption() {
     scheduler.take_snapshot(5, 500, &[(1u64, &b"critical_data"[..])]);
 
     let corrupted = vec![(1u64, &b"corrupted_data"[..])];
-    let result = sorosusu_contracts::backup::state_snapshot::test_restore(
-        &scheduler,
-        5,
-        &corrupted,
-    );
+    let result =
+        sorosusu_contracts::backup::state_snapshot::test_restore(&scheduler, 5, &corrupted);
     match result {
         RestoreResult::ChunkMismatch { chunk_id, .. } => {
             assert_eq!(chunk_id, 1);
@@ -83,16 +78,16 @@ fn test_restore_missing_chunk() {
 
     // Restored data is missing chunk 100.
     let incomplete = vec![(99u64, &b"something_else"[..])];
-    let result = sorosusu_contracts::backup::state_snapshot::test_restore(
-        &scheduler,
-        3,
-        &incomplete,
-    );
+    let result =
+        sorosusu_contracts::backup::state_snapshot::test_restore(&scheduler, 3, &incomplete);
     match result {
         RestoreResult::ChunkMismatch { chunk_id, .. } => {
             assert_eq!(chunk_id, 100);
         }
-        other => panic!("Expected ChunkMismatch due to missing chunk, got {:?}", other),
+        other => panic!(
+            "Expected ChunkMismatch due to missing chunk, got {:?}",
+            other
+        ),
     }
 }
 
@@ -168,7 +163,10 @@ fn test_scheduled_backup_interval_defaults() {
 #[test]
 fn test_restore_result_equality() {
     assert_eq!(RestoreResult::Success, RestoreResult::Success);
-    assert_eq!(RestoreResult::SnapshotMissing, RestoreResult::SnapshotMissing);
+    assert_eq!(
+        RestoreResult::SnapshotMissing,
+        RestoreResult::SnapshotMissing
+    );
 
     let mismatch = RestoreResult::ChunkMismatch {
         chunk_id: 1,
@@ -176,7 +174,11 @@ fn test_restore_result_equality() {
         actual_hash: [2u8; 32],
     };
     match mismatch {
-        RestoreResult::ChunkMismatch { chunk_id, expected_hash, actual_hash } => {
+        RestoreResult::ChunkMismatch {
+            chunk_id,
+            expected_hash,
+            actual_hash,
+        } => {
             assert_eq!(chunk_id, 1);
             assert_eq!(expected_hash, [1u8; 32]);
             assert_eq!(actual_hash, [2u8; 32]);

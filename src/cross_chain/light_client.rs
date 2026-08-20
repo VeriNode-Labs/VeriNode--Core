@@ -153,7 +153,8 @@ impl LightClientRegistry {
             return Err(CrossChainError::TooManyChains);
         }
         let chain_id = config.chain_id.clone();
-        self.chains.insert(chain_id, ConnectedChain::new(config, now_ms));
+        self.chains
+            .insert(chain_id, ConnectedChain::new(config, now_ms));
         Ok(())
     }
 

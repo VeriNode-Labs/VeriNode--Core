@@ -1,9 +1,7 @@
 //! Concurrent reputation-update race tests (#3).
 
 use proptest::prelude::*;
-use sorosusu_contracts::reputation::score::{
-    ReputationLedger, ReputationSource, REPUTATION_MAX,
-};
+use sorosusu_contracts::reputation::score::{ReputationLedger, ReputationSource, REPUTATION_MAX};
 
 const NODE: u32 = 1;
 

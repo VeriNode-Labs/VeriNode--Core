@@ -16,8 +16,16 @@ pub struct SlashingEvidence {
 }
 
 impl SlashingEvidence {
-    pub fn new(slot: Option<Slot>, source_epoch: Option<Epoch>, target_epoch: Option<Epoch>) -> Self {
-        Self { slot, source_epoch, target_epoch }
+    pub fn new(
+        slot: Option<Slot>,
+        source_epoch: Option<Epoch>,
+        target_epoch: Option<Epoch>,
+    ) -> Self {
+        Self {
+            slot,
+            source_epoch,
+            target_epoch,
+        }
     }
 }
 
@@ -71,10 +79,15 @@ pub fn verify_evidence_expiry(ev: &SlashingEvidence, current_slot: Slot) -> bool
 /// Verify surround vote semantics: evidence must include both source and target epochs and
 /// source_epoch < target_epoch. This function returns true if the surround evidence is valid
 /// and within the slashing window (not expired).
-pub fn verify_surround_vote(ev: &SlashingEvidence, current_slot: Slot) -> Result<bool, &'static str> {
+pub fn verify_surround_vote(
+    ev: &SlashingEvidence,
+    current_slot: Slot,
+) -> Result<bool, &'static str> {
     match (ev.source_epoch, ev.target_epoch) {
         (Some(s), Some(t)) => {
-            if s >= t { return Err("invalid_surround_vote_epochs"); }
+            if s >= t {
+                return Err("invalid_surround_vote_epochs");
+            }
             Ok(!verify_evidence_expiry(ev, current_slot))
         }
         _ => Err("missing_surround_vote_epochs"),

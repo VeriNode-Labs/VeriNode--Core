@@ -153,7 +153,10 @@ impl ConsumerGroupState {
 
     /// Returns the total lag across all partitions.
     pub fn total_lag(&self) -> u64 {
-        self.partitions.iter().map(|p| p.lag()).fold(0u64, |acc, l| acc.saturating_add(l))
+        self.partitions
+            .iter()
+            .map(|p| p.lag())
+            .fold(0u64, |acc, l| acc.saturating_add(l))
     }
 
     /// Returns the maximum single-partition lag.
@@ -220,8 +223,8 @@ impl ConsumerCanaryAnalysis {
         if self.messages_processed == 0 {
             return 0;
         }
-        ((self.successful_messages.saturating_mul(10_000)) / self.messages_processed)
-            .min(10_000) as u32
+        ((self.successful_messages.saturating_mul(10_000)) / self.messages_processed).min(10_000)
+            as u32
     }
 
     /// Returns `Ok(())` when the canary meets the release gate criteria.
@@ -451,7 +454,9 @@ impl ConsumerLagMonitor {
             if state.active_consumers < config.max_consumers {
                 return ScalingDecision::ScaleOut { delta: 1 };
             }
-        } else if total_lag <= config.lag_scalein_threshold && total_lag < config.lag_scaleout_threshold {
+        } else if total_lag <= config.lag_scalein_threshold
+            && total_lag < config.lag_scaleout_threshold
+        {
             // Scale in by 1 (or down to min).
             if state.active_consumers > config.min_consumers {
                 return ScalingDecision::ScaleIn { delta: 1 };
@@ -516,10 +521,7 @@ impl ConsumerAutoScaler {
     /// Validates a canary gate before promoting a scale-out to the full group.
     ///
     /// Returns `Ok(())` when the canary meets all release criteria.
-    pub fn canary_gate(
-        &self,
-        canary: &ConsumerCanaryAnalysis,
-    ) -> Result<(), ConsumerLagError> {
+    pub fn canary_gate(&self, canary: &ConsumerCanaryAnalysis) -> Result<(), ConsumerLagError> {
         canary.passes_release_gate()
     }
 
@@ -567,13 +569,8 @@ impl ConsumerGroupRegistry {
     /// Registers or replaces a consumer group state.
     ///
     /// Returns `Err(TooManyGroups)` if the registry is at capacity.
-    pub fn upsert_group(
-        &mut self,
-        state: ConsumerGroupState,
-    ) -> Result<(), ConsumerLagError> {
-        if !self.groups.contains_key(&state.group_id)
-            && self.groups.len() >= MAX_CONSUMER_GROUPS
-        {
+    pub fn upsert_group(&mut self, state: ConsumerGroupState) -> Result<(), ConsumerLagError> {
+        if !self.groups.contains_key(&state.group_id) && self.groups.len() >= MAX_CONSUMER_GROUPS {
             return Err(ConsumerLagError::TooManyGroups);
         }
         if state.partitions.len() > MAX_PARTITIONS_PER_GROUP {
@@ -585,10 +582,7 @@ impl ConsumerGroupRegistry {
 
     /// Evaluates all registered groups at the current timestamp and returns
     /// one [`LagEvaluation`] per group.
-    pub fn evaluate_all(
-        &mut self,
-        now: u64,
-    ) -> Vec<LagEvaluation> {
+    pub fn evaluate_all(&mut self, now: u64) -> Vec<LagEvaluation> {
         let group_ids: Vec<ConsumerGroupId> = self.groups.keys().cloned().collect();
         let mut evaluations = Vec::new();
 
@@ -650,7 +644,12 @@ mod tests {
         }
     }
 
-    fn group(id: &str, consumers: u32, partitions: Vec<PartitionLag>, ts: u64) -> ConsumerGroupState {
+    fn group(
+        id: &str,
+        consumers: u32,
+        partitions: Vec<PartitionLag>,
+        ts: u64,
+    ) -> ConsumerGroupState {
         ConsumerGroupState::new(id.into(), consumers, partitions, ts)
     }
 
@@ -682,8 +681,8 @@ mod tests {
             "payments",
             2,
             vec![
-                partition("events", 0, 900, 1_000, 0),  // lag 100
-                partition("events", 1, 800, 1_000, 0),  // lag 200
+                partition("events", 0, 900, 1_000, 0),   // lag 100
+                partition("events", 1, 800, 1_000, 0),   // lag 200
                 partition("events", 2, 1_000, 1_000, 0), // lag 0
             ],
             0,
@@ -738,7 +737,10 @@ mod tests {
         // lag = 15_000
         let g = group("g4", 2, vec![partition("t", 0, 985_000, 1_000_000, 0)], 0);
         let eval = ConsumerLagMonitor::evaluate_lag(&g, &default_config(), 100, None);
-        assert_eq!(eval.scaling_decision, ScalingDecision::ScaleOut { delta: 1 });
+        assert_eq!(
+            eval.scaling_decision,
+            ScalingDecision::ScaleOut { delta: 1 }
+        );
     }
 
     #[test]
@@ -789,7 +791,10 @@ mod tests {
         let now = 1_000;
         let last_scaling_at = Some(now - 61); // 61 s ago, cooldown = 60 s → elapsed
         let eval = ConsumerLagMonitor::evaluate_lag(&g, &default_config(), now, last_scaling_at);
-        assert_eq!(eval.scaling_decision, ScalingDecision::ScaleOut { delta: 1 });
+        assert_eq!(
+            eval.scaling_decision,
+            ScalingDecision::ScaleOut { delta: 1 }
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -893,7 +898,10 @@ mod tests {
         let g = group("pay", 2, vec![partition("t", 0, 985_000, 1_000_000, 0)], 0);
 
         let eval = scaler.recommend_scale(&g, 1_000).unwrap();
-        assert_eq!(eval.scaling_decision, ScalingDecision::ScaleOut { delta: 1 });
+        assert_eq!(
+            eval.scaling_decision,
+            ScalingDecision::ScaleOut { delta: 1 }
+        );
         assert_eq!(scaler.last_scaling_at("pay"), Some(1_000));
     }
 
@@ -919,7 +927,10 @@ mod tests {
         scaler.recommend_scale(&g, 1_000).unwrap();
         scaler.reset_cooldown("pay");
         let eval = scaler.recommend_scale(&g, 1_001).unwrap();
-        assert_eq!(eval.scaling_decision, ScalingDecision::ScaleOut { delta: 1 });
+        assert_eq!(
+            eval.scaling_decision,
+            ScalingDecision::ScaleOut { delta: 1 }
+        );
     }
 
     #[test]
@@ -956,10 +967,9 @@ mod tests {
     #[test]
     fn registry_rejects_group_exceeding_partition_limit() {
         let mut registry = ConsumerGroupRegistry::default();
-        let partitions: Vec<PartitionLag> =
-            (0..MAX_PARTITIONS_PER_GROUP + 1)
-                .map(|i| partition("t", i as u32, 0, 100, 0))
-                .collect();
+        let partitions: Vec<PartitionLag> = (0..MAX_PARTITIONS_PER_GROUP + 1)
+            .map(|i| partition("t", i as u32, 0, 100, 0))
+            .collect();
         let state = group("oversized", 1, partitions, 0);
         assert_eq!(
             registry.upsert_group(state),
@@ -972,10 +982,20 @@ mod tests {
         let mut registry = ConsumerGroupRegistry::default();
 
         registry
-            .upsert_group(group("g1", 2, vec![partition("t", 0, 985_000, 1_000_000, 0)], 0))
+            .upsert_group(group(
+                "g1",
+                2,
+                vec![partition("t", 0, 985_000, 1_000_000, 0)],
+                0,
+            ))
             .unwrap();
         registry
-            .upsert_group(group("g2", 1, vec![partition("t", 0, 999_900, 1_000_000, 0)], 0))
+            .upsert_group(group(
+                "g2",
+                1,
+                vec![partition("t", 0, 999_900, 1_000_000, 0)],
+                0,
+            ))
             .unwrap();
 
         let evals = registry.evaluate_all(1_000);
@@ -986,7 +1006,12 @@ mod tests {
     fn registry_dashboard_snapshot_reflects_all_groups() {
         let mut registry = ConsumerGroupRegistry::default();
         registry
-            .upsert_group(group("g1", 2, vec![partition("t", 0, 985_000, 1_000_000, 0)], 0))
+            .upsert_group(group(
+                "g1",
+                2,
+                vec![partition("t", 0, 985_000, 1_000_000, 0)],
+                0,
+            ))
             .unwrap();
 
         let snap = registry.dashboard_snapshot(0);
@@ -999,11 +1024,21 @@ mod tests {
     fn registry_upsert_replaces_existing_group() {
         let mut registry = ConsumerGroupRegistry::default();
         registry
-            .upsert_group(group("g1", 2, vec![partition("t", 0, 985_000, 1_000_000, 0)], 0))
+            .upsert_group(group(
+                "g1",
+                2,
+                vec![partition("t", 0, 985_000, 1_000_000, 0)],
+                0,
+            ))
             .unwrap();
         // Replace with a healthy state.
         registry
-            .upsert_group(group("g1", 2, vec![partition("t", 0, 999_900, 1_000_000, 0)], 0))
+            .upsert_group(group(
+                "g1",
+                2,
+                vec![partition("t", 0, 999_900, 1_000_000, 0)],
+                0,
+            ))
             .unwrap();
 
         let snap = registry.dashboard_snapshot(0);

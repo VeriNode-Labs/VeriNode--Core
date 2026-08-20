@@ -29,7 +29,10 @@ fn ten_thousand_epochs_within_one_unit() {
     let got = update_reputation(score0, 10_000, DecayFactor::default());
     let want = ideal(score0, 10_000);
     let diff = got.abs_diff(want);
-    assert!(diff <= 1, "10k-epoch decay off by {diff} (got {got}, want {want})");
+    assert!(
+        diff <= 1,
+        "10k-epoch decay off by {diff} (got {got}, want {want})"
+    );
 }
 
 /// Accuracy holds across the whole curve, not just at the tail.

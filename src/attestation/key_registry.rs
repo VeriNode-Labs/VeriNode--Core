@@ -34,7 +34,9 @@ extern crate alloc;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
-use crate::attestation::verifier::{verify_attestation_signature, AttestationData, SecretKey, Signature};
+use crate::attestation::verifier::{
+    verify_attestation_signature, AttestationData, SecretKey, Signature,
+};
 use crate::crypto::domain::Domain;
 
 /// Validator identifier.

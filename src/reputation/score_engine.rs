@@ -99,7 +99,11 @@ pub fn decay_for_epochs(
 /// Decay a prior integer score across `elapsed_epochs` and return the new
 /// integer score. Replaces the lossy Q16.16-only `(score * lambda) >> 16` loop
 /// with Q32.32 accumulation (#11).
-pub fn update_reputation(prev_score: u64, elapsed_epochs: TimeSinceLastUpdate, factor: DecayFactor) -> u64 {
+pub fn update_reputation(
+    prev_score: u64,
+    elapsed_epochs: TimeSinceLastUpdate,
+    factor: DecayFactor,
+) -> u64 {
     debug_assert!(
         prev_score <= MAX_REPUTATION,
         "previous reputation score is outside [0, MAX_REPUTATION]"

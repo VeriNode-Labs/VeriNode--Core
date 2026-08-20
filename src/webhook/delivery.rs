@@ -8,11 +8,11 @@
 //! permanently failed.
 
 extern crate alloc;
+use crate::crypto::bls_keys::{scalar_mul, subgroup_check_g2, G2Point};
+use crate::crypto::domain::{compute_domain, Domain};
+use crate::crypto::sha256::sha256;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use crate::crypto::bls_keys::{G2Point, scalar_mul, subgroup_check_g2};
-use crate::crypto::domain::{Domain, compute_domain};
-use crate::crypto::sha256::sha256;
 
 // --- CONSTANTS ---
 
@@ -66,18 +66,11 @@ impl WebhookPayload {
     /// is `signing_scalar * H(signing_root)` where `H` maps the signing
     /// root to a group element by interpreting the first 8 bytes as a
     /// little-endian u64 (toy group model).
-    pub fn sign(
-        event_id: u64,
-        data: &[u8],
-        signing_scalar: u64,
-        fork_version: [u8; 4],
-    ) -> Self {
+    pub fn sign(event_id: u64, data: &[u8], signing_scalar: u64, fork_version: [u8; 4]) -> Self {
         let domain = compute_domain(DOMAIN_WEBHOOK, fork_version);
         let signing_root = compute_webhook_signing_root(event_id, data, &domain);
         // Map signing root to group element: use first 8 bytes as little-endian u64.
-        let message_point = G2Point::from_bytes(
-            &hash_to_8_bytes(&signing_root),
-        );
+        let message_point = G2Point::from_bytes(&hash_to_8_bytes(&signing_root));
         let signature = scalar_mul(signing_scalar, &message_point);
 
         // Derive public key: signing_scalar * generator (scalar 6 in the toy group).
@@ -438,9 +431,9 @@ mod tests {
 
     #[test]
     fn test_backoff_sequence() {
-        assert_eq!(compute_backoff(1), 2);  // 2 * 2^0
-        assert_eq!(compute_backoff(2), 4);  // 2 * 2^1
-        assert_eq!(compute_backoff(3), 8);  // 2 * 2^2
+        assert_eq!(compute_backoff(1), 2); // 2 * 2^0
+        assert_eq!(compute_backoff(2), 4); // 2 * 2^1
+        assert_eq!(compute_backoff(3), 8); // 2 * 2^2
         assert_eq!(compute_backoff(4), 16); // 2 * 2^3
         assert_eq!(compute_backoff(5), 32); // 2 * 2^4
     }

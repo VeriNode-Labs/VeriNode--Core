@@ -1,4 +1,3 @@
-
 pub const WINDOW_SIZE: usize = 4096;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -53,7 +52,7 @@ impl Default for CircularWindow {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::reputation::compute_weighted_average;
+    use crate::reputation::score_engine::compute_weighted_average;
 
     #[test]
     fn test_new_window_is_empty() {

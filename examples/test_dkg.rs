@@ -1,6 +1,8 @@
 //! Simple manual test for DKG serialization
 
-use sorosusu_contracts::crypto::bls_keys::{G1Point, SharedPublicKey, serialize_shared_public_key, deserialize_shared_public_key};
+use sorosusu_contracts::crypto::bls_keys::{
+    deserialize_shared_public_key, serialize_shared_public_key, G1Point, SharedPublicKey,
+};
 
 fn main() {
     println!("Testing DKG Serialization Fix...\n");
@@ -11,7 +13,10 @@ fn main() {
     let bytes1 = point1.to_bytes();
     let point1_recovered = G1Point::from_bytes(&bytes1);
     println!("  Original: x={:#x}, y_sign={}", point1.x, point1.y_sign);
-    println!("  Recovered: x={:#x}, y_sign={}", point1_recovered.x, point1_recovered.y_sign);
+    println!(
+        "  Recovered: x={:#x}, y_sign={}",
+        point1_recovered.x, point1_recovered.y_sign
+    );
     println!("  Match: {}\n", point1 == point1_recovered);
 
     // Test 2: Verify big-endian format
@@ -30,8 +35,16 @@ fn main() {
     let point_neg = G1Point::new(42, true);
     let bytes_pos = point_pos.to_bytes();
     let bytes_neg = point_neg.to_bytes();
-    println!("  y_sign=false: byte[0] = {:#04X} (bit 7 = {})", bytes_pos[0], (bytes_pos[0] & 0x80) >> 7);
-    println!("  y_sign=true:  byte[0] = {:#04X} (bit 7 = {})", bytes_neg[0], (bytes_neg[0] & 0x80) >> 7);
+    println!(
+        "  y_sign=false: byte[0] = {:#04X} (bit 7 = {})",
+        bytes_pos[0],
+        (bytes_pos[0] & 0x80) >> 7
+    );
+    println!(
+        "  y_sign=true:  byte[0] = {:#04X} (bit 7 = {})",
+        bytes_neg[0],
+        (bytes_neg[0] & 0x80) >> 7
+    );
     let y_sign_correct = (bytes_pos[0] & 0x80) == 0 && (bytes_neg[0] & 0x80) == 0x80;
     println!("    Correct: {}\n", y_sign_correct);
 
@@ -42,10 +55,22 @@ fn main() {
     let shared_key = SharedPublicKey::new(a0, a1);
     let serialized = serialize_shared_public_key(&shared_key);
     let deserialized = deserialize_shared_public_key(&serialized);
-    println!("  Original a0: x={:#x}, y_sign={}", shared_key.a0.x, shared_key.a0.y_sign);
-    println!("  Recovered a0: x={:#x}, y_sign={}", deserialized.a0.x, deserialized.a0.y_sign);
-    println!("  Original a1: x={:#x}, y_sign={}", shared_key.a1.x, shared_key.a1.y_sign);
-    println!("  Recovered a1: x={:#x}, y_sign={}", deserialized.a1.x, deserialized.a1.y_sign);
+    println!(
+        "  Original a0: x={:#x}, y_sign={}",
+        shared_key.a0.x, shared_key.a0.y_sign
+    );
+    println!(
+        "  Recovered a0: x={:#x}, y_sign={}",
+        deserialized.a0.x, deserialized.a0.y_sign
+    );
+    println!(
+        "  Original a1: x={:#x}, y_sign={}",
+        shared_key.a1.x, shared_key.a1.y_sign
+    );
+    println!(
+        "  Recovered a1: x={:#x}, y_sign={}",
+        deserialized.a1.x, deserialized.a1.y_sign
+    );
     println!("  Match: {}\n", shared_key == deserialized);
 
     // Test 5: Verify 96-byte serialization

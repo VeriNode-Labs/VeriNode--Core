@@ -107,8 +107,7 @@ fn commit_then_reveal_settles_every_leafs_bond() {
 
     let leaves = leaves_from(&env, &entries, &proofs);
     let total_slashed = env.as_contract(&contract_id, || {
-        PoolManager::reveal_settlement(&env, &settler, batch_id, &root, &salt_val, &leaves)
-            .unwrap()
+        PoolManager::reveal_settlement(&env, &settler, batch_id, &root, &salt_val, &leaves).unwrap()
     });
 
     let expected_total: i128 = entries.iter().map(|(_, amount)| *amount).sum();
@@ -232,14 +231,9 @@ fn reveal_by_non_committer_is_unauthorized() {
     let outsider = generated(&env);
 
     env.as_contract(&contract_id, || {
-        let batch_id = PoolManager::commit_settlement(
-            &env,
-            &settler,
-            &root,
-            entries.len() as u32,
-            &salt_val,
-        )
-        .unwrap();
+        let batch_id =
+            PoolManager::commit_settlement(&env, &settler, &root, entries.len() as u32, &salt_val)
+                .unwrap();
 
         env.ledger()
             .set_timestamp(START + super::pool_manager::MIN_REVEAL_DELAY_SECONDS);
@@ -397,8 +391,7 @@ fn reveal_settlement_caps_debit_at_remaining_bond_balance() {
 
     let leaves = leaves_from(&env, &entries, &proofs);
     let total_slashed = env.as_contract(&contract_id, || {
-        PoolManager::reveal_settlement(&env, &settler, batch_id, &root, &salt_val, &leaves)
-            .unwrap()
+        PoolManager::reveal_settlement(&env, &settler, batch_id, &root, &salt_val, &leaves).unwrap()
     });
 
     assert_eq!(total_slashed, 300);
@@ -539,7 +532,11 @@ fn front_runner_cannot_hijack_or_replay_a_revealed_commitment() {
     // No bond has moved: the front-run attempt above did not settle anything.
     env.as_contract(&contract_id, || {
         for (node_id, amount) in entries.iter() {
-            assert_eq!(bond_of(&env, node_id), 1000, "bond={amount} must be untouched");
+            assert_eq!(
+                bond_of(&env, node_id),
+                1000,
+                "bond={amount} must be untouched"
+            );
         }
     });
 
@@ -629,8 +626,12 @@ fn commit_settlement_accepts_exactly_max_batch_size() {
     });
 
     env.as_contract(&contract_id, || {
-        let result = PoolManager::commit_settlement(&env, &settler, &root, MAX_BATCH_SIZE, &salt_val);
-        assert!(result.is_ok(), "leaf_count == MAX_BATCH_SIZE must be accepted");
+        let result =
+            PoolManager::commit_settlement(&env, &settler, &root, MAX_BATCH_SIZE, &salt_val);
+        assert!(
+            result.is_ok(),
+            "leaf_count == MAX_BATCH_SIZE must be accepted"
+        );
     });
 }
 
@@ -690,8 +691,7 @@ fn reveal_settlement_full_batch_fits_default_resource_limits() {
     env.budget().reset_tracker();
 
     let total_slashed = env.as_contract(&contract_id, || {
-        PoolManager::reveal_settlement(&env, &settler, batch_id, &root, &salt_val, &leaves)
-            .unwrap()
+        PoolManager::reveal_settlement(&env, &settler, batch_id, &root, &salt_val, &leaves).unwrap()
     });
 
     let cpu = env.budget().cpu_instruction_cost();

@@ -207,3 +207,4 @@ mod tests {
         assert!(s.drift_detected(&config, 0));
     }
 }
+

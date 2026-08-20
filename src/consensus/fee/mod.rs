@@ -2,4 +2,4 @@
 
 pub mod burn;
 
-pub use burn::{split_fee, AccountId, FeeBurnError, FeeSplit, FinalizedBlockFees};
+pub use burn::split_fee;

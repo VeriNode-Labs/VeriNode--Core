@@ -1,6 +1,10 @@
+// register_stellar_asset_contract is deprecated in favour of the v2 API, which
+// returns a different type; migrating it changes test setup behaviour and is out
+// of scope for this formatting/lint pass.
+#![allow(deprecated)]
 #![cfg(test)]
-use soroban_sdk::{testutils::Address as _, Address, Env, token, contract, contractimpl};
-use sorosusu_contracts::{SoroSusu, SoroSusuClient, SoroSusuTrait};
+use soroban_sdk::{contract, contractimpl, testutils::Address as _, token, Address, Env};
+use sorosusu_contracts::{SoroSusu, SoroSusuClient};
 
 #[contract]
 pub struct MockNft;
@@ -20,27 +24,27 @@ fn test_full_rosca_cycle() {
     let creator = Address::generate(&env);
     let user1 = Address::generate(&env);
     let user2 = Address::generate(&env);
-    
+
     // Register contract
     let contract_id = env.register_contract(None, SoroSusu);
     let client = SoroSusuClient::new(&env, &contract_id);
-    
+
     // Initialize
     client.init(&admin);
-    
+
     // Deploy mock token
     let token_admin = Address::generate(&env);
     let token_id = env.register_stellar_asset_contract(token_admin.clone());
     let token_client = token::StellarAssetClient::new(&env, &token_id);
     let token_token_client = token::Client::new(&env, &token_id);
-    
+
     // Deploy mock NFT
     let nft_id = env.register_contract(None, MockNft);
-    
+
     // Mint tokens to users
     token_client.mint(&user1, &10000);
     token_client.mint(&user2, &10000);
-    
+
     // Create circle
     let contribution_amount: i128 = 1000;
     let cycle_duration: u64 = 86400; // 1 day
@@ -53,22 +57,22 @@ fn test_full_rosca_cycle() {
         &100, // 1% insurance fee
         &nft_id,
     );
-    
+
     // Join circle
     client.join_circle(&user1, &circle_id, &1, &None);
     client.join_circle(&user2, &circle_id, &1, &None);
-    
+
     // Deposits
     client.deposit(&user1, &circle_id);
     client.deposit(&user2, &circle_id);
-    
+
     // Check balances
     assert_eq!(token_token_client.balance(&user1), 10000 - 1000 - 10); // 1000 + 1% fee
     assert_eq!(token_token_client.balance(&user2), 10000 - 1000 - 10);
-    
+
     // Finalize round (Simplified in this version)
     // In our actual implementation, finalize_round was incomplete, let's fix it if needed.
     // For this test, let's assume it sets the recipient.
-    
+
     println!("✅ Pipeline test completed successfully");
 }

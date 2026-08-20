@@ -34,7 +34,7 @@ pub enum BitfieldError {
 /// Number of bytes required to hold `committee_size` bits.
 #[inline]
 fn byte_count(committee_size: usize) -> usize {
-    (committee_size + 7) / 8
+    committee_size.div_ceil(8)
 }
 
 /// A fixed-size attestation bitfield (`Bitvector[committee_size]`), one bit per
@@ -51,8 +51,7 @@ impl AttestationBitfield {
         if committee_size > MAX_COMMITTEE_SIZE {
             return Err(BitfieldError::CommitteeTooLarge);
         }
-        let mut bytes = Vec::new();
-        bytes.resize(byte_count(committee_size), 0u8);
+        let bytes = vec![0; byte_count(committee_size)];
         Ok(Self {
             bytes,
             len: committee_size,
