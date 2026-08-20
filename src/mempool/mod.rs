@@ -15,10 +15,5 @@ pub mod eviction;
 pub mod priority_queue;
 pub mod reorg_handler;
 
-pub use block_builder::{BlockBuilder, BuiltBlock, BLOCK_GAS_LIMIT};
-pub use eviction::{InsertOutcome, MempoolEvicted, EVICTION_BATCH_SIZE, MEMPOOL_CAPACITY};
-pub use priority_queue::{
-    FeeAmount, Gas, MempoolError, MempoolMetrics, PriorityMempool, Transaction, TransactionError,
-    TxHash,
-};
-pub use reorg_handler::{ReorgHandler, ReorgOutcome};
+pub use block_builder::{BlockBuilder, BLOCK_GAS_LIMIT};
+pub use priority_queue::{PriorityMempool, Transaction, TxHash};

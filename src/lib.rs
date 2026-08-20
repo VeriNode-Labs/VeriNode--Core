@@ -70,6 +70,10 @@ pub mod replication;
 // Expired leases release jobs back for reclamation by other workers.
 pub mod job_scheduler;
 
+// Graceful degradation with feature flags and capacity shedding (issue #132).
+// Exposed for integration tests and off-chain monitoring helpers.
+pub mod graceful_degradation;
+
 // Incident response runbook automation and PagerDuty event preparation.
 // Deterministic, side-effect-free runbook selection and PagerDuty Events API
 // payload building for blue-green and canary deployment gate decisions.

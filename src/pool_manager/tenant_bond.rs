@@ -1,6 +1,6 @@
 use soroban_sdk::{contracttype, symbol_short, Address, Env};
 
-use super::ReentrancyGuard;
+use super::reentrancy_guard::ReentrancyGuard;
 
 // --- CONSTANTS ---
 

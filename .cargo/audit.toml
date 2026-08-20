@@ -43,6 +43,7 @@ informational_warnings = []
 # are already suppressed via the ignore list. Any new, un-ignored advisory will
 # still cause a non-zero exit code via `vulnerability = "deny"` in deny.toml.
 deny = []
+quiet = false
 
 [yanked]
 # Delegate yanked-crate detection to cargo-deny (deny.toml: yanked = "warn")
