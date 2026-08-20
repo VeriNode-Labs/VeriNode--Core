@@ -8,10 +8,10 @@ all-features = true
 [advisories]
 db-path = "~/.cargo/advisory-db"
 db-urls = ["https://github.com/rustsec/advisory-db"]
-vulnerability = "deny"
-unmaintained = "warn"
+# cargo-deny v0.20 uses scope values for unmaintained advisories rather than
+# lint levels. Treat unmaintained crates like the previous warning-only policy.
+unmaintained = "none"
 yanked = "warn"
-notice = "warn"
 ignore = [
   # curve25519-dalek timing side-channel in Scalar sub (RUSTSEC-2024-0344).
   # Transitive dep via soroban-sdk; not directly reachable from project code.
