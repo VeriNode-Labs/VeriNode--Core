@@ -159,6 +159,6 @@ impl ReputationLedger {
     }
 
     fn push_event(&mut self, node: NodeId, event: ReputationEvent) {
-        self.events.entry(node).or_insert_with(Vec::new).push(event);
+        self.events.entry(node).or_default().push(event);
     }
 }

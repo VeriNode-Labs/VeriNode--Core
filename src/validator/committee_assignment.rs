@@ -125,10 +125,9 @@ impl CommitteeAssignment {
     pub fn get_committee_view(&self, _slot: u64) -> CommitteeView {
         // Check if we're in a reorg window
         if let Some(_reorg) = self.pending_reorg {
-            if self.old_validator_indices.is_some() {
+            if let Some(old_indices) = self.old_validator_indices.as_ref() {
                 // During reorg window or until finalized: return ambiguous view
-                let old_root =
-                    self.compute_committee_root(self.old_validator_indices.as_ref().unwrap());
+                let old_root = self.compute_committee_root(old_indices);
                 let new_root = self.compute_committee_root(&self.validator_indices);
                 return CommitteeView::ambiguous(old_root, new_root);
             }

@@ -278,7 +278,7 @@ fn config_toggle_behavior() {
 
     // Default is strict
     let default = SignatureVerifierConfig::default();
-    assert_eq!(default.require_subgroup_check, true);
+    assert!(default.require_subgroup_check);
 }
 
 /// Test: Multiple low-order points in aggregate

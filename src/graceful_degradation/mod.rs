@@ -478,10 +478,7 @@ impl DeploymentStage {
 
     /// Returns `true` for stages that carry canary traffic.
     pub const fn is_canary(self) -> bool {
-        matches!(
-            self,
-            Self::CanaryOnePercent | Self::CanaryTenPercent
-        )
+        matches!(self, Self::CanaryOnePercent | Self::CanaryTenPercent)
     }
 }
 
@@ -551,10 +548,7 @@ impl DeploymentStageRegistry {
 
     /// Returns a sorted snapshot of all (feature, stage) pairs.
     pub fn snapshot(&self) -> Vec<(String, DeploymentStage)> {
-        self.stages
-            .iter()
-            .map(|(k, v)| (k.clone(), *v))
-            .collect()
+        self.stages.iter().map(|(k, v)| (k.clone(), *v)).collect()
     }
 }
 
@@ -780,26 +774,16 @@ mod tests {
     #[test]
     fn full_service_when_healthy_and_flag_enabled() {
         let flags = flags_with(enabled_flag("payments"));
-        let decision = DegradationPolicy::evaluate(
-            "payments",
-            false,
-            &healthy_sensor(),
-            &flags,
-            &config(),
-        );
+        let decision =
+            DegradationPolicy::evaluate("payments", false, &healthy_sensor(), &flags, &config());
         assert_eq!(decision, DegradationDecision::FullService);
     }
 
     #[test]
     fn degraded_fallback_when_flag_disabled() {
         let flags = flags_with(FeatureFlag::new("payments".into()));
-        let decision = DegradationPolicy::evaluate(
-            "payments",
-            false,
-            &healthy_sensor(),
-            &flags,
-            &config(),
-        );
+        let decision =
+            DegradationPolicy::evaluate("payments", false, &healthy_sensor(), &flags, &config());
         assert_eq!(decision, DegradationDecision::DegradedFallback);
     }
 
@@ -849,26 +833,16 @@ mod tests {
             flags_enabled: false,
             ..config()
         };
-        let decision = DegradationPolicy::evaluate(
-            "any",
-            false,
-            &overloaded_sensor_hard(),
-            &flags,
-            &cfg,
-        );
+        let decision =
+            DegradationPolicy::evaluate("any", false, &overloaded_sensor_hard(), &flags, &cfg);
         assert_eq!(decision, DegradationDecision::ShedLoad);
     }
 
     #[test]
     fn degraded_fallback_when_latency_violated() {
         let flags = flags_with(enabled_flag("payments"));
-        let decision = DegradationPolicy::evaluate(
-            "payments",
-            false,
-            &slow_sensor(),
-            &flags,
-            &config(),
-        );
+        let decision =
+            DegradationPolicy::evaluate("payments", false, &slow_sensor(), &flags, &config());
         assert_eq!(decision, DegradationDecision::DegradedFallback);
     }
 
@@ -972,10 +946,7 @@ mod tests {
             p99_latency_ms: 101,
             security_review_passed: true,
         };
-        assert_eq!(
-            gate.passes_release_gate(),
-            Err(CanaryError::CanaryFailed)
-        );
+        assert_eq!(gate.passes_release_gate(), Err(CanaryError::CanaryFailed));
     }
 
     #[test]
@@ -986,10 +957,7 @@ mod tests {
             p99_latency_ms: 50,
             security_review_passed: true,
         };
-        assert_eq!(
-            gate.passes_release_gate(),
-            Err(CanaryError::CanaryFailed)
-        );
+        assert_eq!(gate.passes_release_gate(), Err(CanaryError::CanaryFailed));
     }
 
     #[test]
@@ -1009,11 +977,26 @@ mod tests {
 
     #[test]
     fn deployment_stage_advances_through_full_sequence() {
-        assert_eq!(DeploymentStage::Development.next(), DeploymentStage::BlueGreenShadow);
-        assert_eq!(DeploymentStage::BlueGreenShadow.next(), DeploymentStage::CanaryOnePercent);
-        assert_eq!(DeploymentStage::CanaryOnePercent.next(), DeploymentStage::CanaryTenPercent);
-        assert_eq!(DeploymentStage::CanaryTenPercent.next(), DeploymentStage::FullRollout);
-        assert_eq!(DeploymentStage::FullRollout.next(), DeploymentStage::FullRollout);
+        assert_eq!(
+            DeploymentStage::Development.next(),
+            DeploymentStage::BlueGreenShadow
+        );
+        assert_eq!(
+            DeploymentStage::BlueGreenShadow.next(),
+            DeploymentStage::CanaryOnePercent
+        );
+        assert_eq!(
+            DeploymentStage::CanaryOnePercent.next(),
+            DeploymentStage::CanaryTenPercent
+        );
+        assert_eq!(
+            DeploymentStage::CanaryTenPercent.next(),
+            DeploymentStage::FullRollout
+        );
+        assert_eq!(
+            DeploymentStage::FullRollout.next(),
+            DeploymentStage::FullRollout
+        );
     }
 
     #[test]
@@ -1032,7 +1015,8 @@ mod tests {
     #[test]
     fn registry_promotes_through_pre_canary_stages_unconditionally() {
         let mut reg = DeploymentStageRegistry::new();
-        reg.set_stage("feat".into(), DeploymentStage::Development).unwrap();
+        reg.set_stage("feat".into(), DeploymentStage::Development)
+            .unwrap();
 
         let next = reg.promote("feat", None).unwrap();
         assert_eq!(next, DeploymentStage::BlueGreenShadow);
@@ -1042,7 +1026,8 @@ mod tests {
     #[test]
     fn registry_requires_passing_canary_to_promote_from_canary_stage() {
         let mut reg = DeploymentStageRegistry::new();
-        reg.set_stage("feat".into(), DeploymentStage::CanaryOnePercent).unwrap();
+        reg.set_stage("feat".into(), DeploymentStage::CanaryOnePercent)
+            .unwrap();
 
         // No canary → fails.
         assert_eq!(reg.promote("feat", None), Err(CanaryError::CanaryFailed));
@@ -1063,7 +1048,8 @@ mod tests {
     #[test]
     fn registry_promotes_from_canary_stage_with_passing_gate() {
         let mut reg = DeploymentStageRegistry::new();
-        reg.set_stage("feat".into(), DeploymentStage::CanaryOnePercent).unwrap();
+        reg.set_stage("feat".into(), DeploymentStage::CanaryOnePercent)
+            .unwrap();
 
         let good = CanaryGate {
             requests: 10_000,
@@ -1078,8 +1064,10 @@ mod tests {
     #[test]
     fn registry_snapshot_returns_all_features() {
         let mut reg = DeploymentStageRegistry::new();
-        reg.set_stage("a".into(), DeploymentStage::FullRollout).unwrap();
-        reg.set_stage("b".into(), DeploymentStage::Development).unwrap();
+        reg.set_stage("a".into(), DeploymentStage::FullRollout)
+            .unwrap();
+        reg.set_stage("b".into(), DeploymentStage::Development)
+            .unwrap();
 
         let snap = reg.snapshot();
         assert_eq!(snap.len(), 2);

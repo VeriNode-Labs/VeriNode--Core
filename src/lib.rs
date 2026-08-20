@@ -104,6 +104,7 @@ pub mod secret_rotation;
 // lag, evaluating scaling policies, and producing canary-gated scale-out /
 // scale-in decisions.  All math is pure Rust so on-chain contracts, off-chain
 // monitoring agents, and blue-green deployment gates share the same thresholds.
+pub mod graceful_degradation;
 pub mod kafka_consumer;
 
 // --- ERROR CODES ---
@@ -152,7 +153,6 @@ pub enum Error {
 // --- CONSTANTS ---
 const REFERRAL_DISCOUNT_BPS: u32 = 500; // 5%
 const RATE_LIMIT_SECONDS: u64 = 300; // 5 minutes
-const LENIENCY_GRACE_PERIOD: u64 = 172800; // 48 hours in seconds
 const VOTING_PERIOD: u64 = 86400; // 24 hours voting period
 const MINIMUM_VOTING_PARTICIPATION: u32 = 50; // 50% minimum participation
 const SIMPLE_MAJORITY_THRESHOLD: u32 = 51; // 51% simple majority
@@ -1127,7 +1127,7 @@ impl SoroSusuTrait for SoroSusu {
             social_capital.trust_score = (social_capital.trust_score + 2).min(100);
         // Increase trust score
         } else {
-            social_capital.trust_score = (social_capital.trust_score - 1).max(0);
+            social_capital.trust_score -= 1;
             // Decrease trust score
         }
 
@@ -1136,9 +1136,9 @@ impl SoroSusuTrait for SoroSusu {
             .set(&social_capital_key, &social_capital);
 
         // Check if voting should be finalized early (if majority reached)
-        let total_possible_votes = (circle.member_count - 1) as u32; // Exclude requester
+        let total_possible_votes = circle.member_count - 1; // Exclude requester
         let votes_needed_for_majority =
-            (total_possible_votes * SIMPLE_MAJORITY_THRESHOLD + 99) / 100;
+            (total_possible_votes * SIMPLE_MAJORITY_THRESHOLD).div_ceil(100);
 
         if votes_needed_for_majority > 0 && request.approve_votes >= votes_needed_for_majority {
             request.status = LeniencyRequestStatus::Approved;
@@ -1401,7 +1401,7 @@ impl SoroSusuTrait for SoroSusu {
             .instance()
             .get(&circle_key)
             .expect("Circle not found");
-        let required_quorum = (circle.member_count * QUADRATIC_QUORUM + 99) / 100;
+        let required_quorum = (circle.member_count * QUADRATIC_QUORUM).div_ceil(100);
         proposal.quorum_met = proposal.total_voting_power >= required_quorum as u64;
 
         env.storage().instance().set(&proposal_key, &proposal);
@@ -1794,9 +1794,9 @@ impl SoroSusu {
             .get(&circle_key)
             .expect("Circle not found");
 
-        let total_possible_votes = (circle.member_count - 1) as u32; // Exclude requester
+        let total_possible_votes = circle.member_count - 1; // Exclude requester
         let minimum_participation =
-            (total_possible_votes * MINIMUM_VOTING_PARTICIPATION + 99) / 100;
+            (total_possible_votes * MINIMUM_VOTING_PARTICIPATION).div_ceil(100);
 
         let mut final_status = LeniencyRequestStatus::Expired;
 

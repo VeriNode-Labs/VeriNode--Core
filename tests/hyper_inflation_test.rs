@@ -7,7 +7,6 @@ fn test_18_decimal_token_extreme_volumes() {
 
     // Verify amount fits in i128
     assert!(extreme_amount > 0);
-    assert!(extreme_amount <= i128::MAX);
 
     // Test arithmetic doesn't overflow
     let doubled = extreme_amount
@@ -51,7 +50,6 @@ fn test_contribution_amount_with_18_decimals() {
     for amount in test_cases {
         // Verify amount fits in i128
         assert!(amount > 0);
-        assert!(amount <= i128::MAX);
 
         // Simulate fee calculation (0.5% = 50 bps)
         let fee_bps: u32 = 50;

@@ -56,7 +56,7 @@ impl G2Point {
 
     /// Whether this point is the identity.
     pub fn is_identity(&self) -> bool {
-        self.value % MODEL_GROUP_ORDER == 0
+        self.value.is_multiple_of(MODEL_GROUP_ORDER)
     }
 
     /// Deserialize a compressed point from wire bytes.

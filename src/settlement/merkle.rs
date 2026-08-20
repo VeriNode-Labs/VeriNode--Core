@@ -80,7 +80,7 @@ pub fn verify_proof(
     let mut computed = leaf.clone();
     let mut idx = index;
     for sibling in proof.iter() {
-        computed = if idx % 2 == 0 {
+        computed = if idx.is_multiple_of(2) {
             hash_node(env, &computed, &sibling)
         } else {
             hash_node(env, &sibling, &computed)

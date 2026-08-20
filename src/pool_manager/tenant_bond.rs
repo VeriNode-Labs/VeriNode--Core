@@ -91,7 +91,7 @@ impl TenantBondManager {
         let _guard = ReentrancyGuard::new(env);
 
         // --- CHECKS ---
-        if amount < MIN_BOND_AMOUNT || amount > MAX_BOND_AMOUNT {
+        if !(MIN_BOND_AMOUNT..=MAX_BOND_AMOUNT).contains(&amount) {
             return Err(BondError::InvalidBondAmount);
         }
 

@@ -3,9 +3,7 @@
 //! Exercises signing, verification, delivery engine enqueue/dequeue lifecycle,
 //! exponential backoff scheduling, and idempotency guarantees.
 
-use sorosusu_contracts::crypto::bls_keys::{
-    low_order_point, scalar_mul, subgroup_check_g2, G2Point,
-};
+use sorosusu_contracts::crypto::bls_keys::{low_order_point, subgroup_check_g2, G2Point};
 use sorosusu_contracts::crypto::domain::compute_domain;
 use sorosusu_contracts::webhook::delivery::{
     compute_backoff, DeliveryEngine, DeliveryStatus, WebhookPayload, BASE_BACKOFF_SECONDS,

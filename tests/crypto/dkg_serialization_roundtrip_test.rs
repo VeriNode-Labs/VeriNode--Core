@@ -272,7 +272,7 @@ fn test_regression_known_serialization_format() {
     // Round-trip and verify
     let deserialized = G1Point::from_bytes(&bytes);
     assert_eq!(deserialized.x, 1);
-    assert_eq!(deserialized.y_sign, true);
+    assert!(deserialized.y_sign);
 
     // Also test with y_sign=false
     let point2 = G1Point::new(0x0000000000000001, false);

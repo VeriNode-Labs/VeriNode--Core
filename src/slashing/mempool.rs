@@ -24,6 +24,12 @@ pub struct SlashingMempool {
     rate_limits: BTreeMap<ValidatorIndex, u8>,
 }
 
+impl Default for SlashingMempool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SlashingMempool {
     pub fn new() -> Self {
         Self {

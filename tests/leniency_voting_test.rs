@@ -1,8 +1,6 @@
 use soroban_sdk::testutils::{Address as _, Ledger};
-use soroban_sdk::{Address, Env, String, Symbol};
-use sorosusu_contracts::{
-    DataKey, LeniencyRequestStatus, LeniencyVote, MemberStatus, SoroSusu, SoroSusuClient,
-};
+use soroban_sdk::{Address, Env, String};
+use sorosusu_contracts::{DataKey, LeniencyRequestStatus, LeniencyVote, SoroSusu, SoroSusuClient};
 
 #[soroban_sdk::contract]
 pub struct MockNft;

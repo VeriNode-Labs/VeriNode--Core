@@ -1,5 +1,10 @@
+// register_stellar_asset_contract is deprecated in favour of the v2 API, which
+// returns a different type; migrating it changes test setup behaviour and is out
+// of scope for this formatting/lint pass.
+#![allow(deprecated)]
+
 use soroban_sdk::{contract, contractimpl, testutils::Address as _, token, Address, Env};
-use sorosusu_contracts::{SoroSusu, SoroSusuClient, SoroSusuTrait};
+use sorosusu_contracts::{SoroSusu, SoroSusuClient};
 
 #[contract]
 pub struct MockNft;

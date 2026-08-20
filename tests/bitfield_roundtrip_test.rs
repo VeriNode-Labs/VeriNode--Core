@@ -58,7 +58,7 @@ fn bitfield_roundtrip_fixed() {
         bf.set(i, true).unwrap();
     }
     let wire = bf.to_ssz_bytes();
-    assert_eq!(wire.len(), (20 + 7) / 8);
+    assert_eq!(wire.len(), 20_usize.div_ceil(8));
 
     let decoded = AttestationBitfield::from_ssz_bytes(&wire, 20).unwrap();
     assert_eq!(decoded, bf);
@@ -118,7 +118,7 @@ proptest! {
         }
 
         let wire = bf.to_ssz_bytes();
-        prop_assert_eq!(wire.len(), (bits.len() + 7) / 8);
+        prop_assert_eq!(wire.len(), bits.len().div_ceil(8));
 
         let decoded = AttestationBitfield::from_ssz_bytes(&wire, bits.len()).unwrap();
         for (i, b) in bits.iter().enumerate() {

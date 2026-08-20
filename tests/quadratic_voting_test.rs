@@ -1,6 +1,6 @@
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::testutils::Ledger;
-use soroban_sdk::{Address, Env, String, Symbol};
+use soroban_sdk::{Address, Env, String};
 use sorosusu_contracts::{
     DataKey, ProposalStatus, ProposalType, QuadraticVoteChoice, SoroSusu, SoroSusuClient,
 };

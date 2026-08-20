@@ -5,8 +5,8 @@
 //! >> 16`) truncates every epoch, and the public Q16.16 grid (1/65536) cannot
 //! even represent `lambda = 0.9985` exactly — the nearest value is
 //! `65431/65536 = 0.99848938`. Over thousands of epochs the representation gap
-//! plus per-epoch truncation keep a long-idle score pinned above its true
-//! value instead of decaying toward zero (#11).
+//! > > plus per-epoch truncation keep a long-idle score pinned above its true
+//! > > value instead of decaying toward zero (#11).
 //!
 //! The fix compounds decay in Q32.32 (1/2^32 precision) and downsamples to the
 //! public Q16.16 / integer representation only on read-out, so per-epoch
