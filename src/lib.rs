@@ -114,6 +114,14 @@ pub mod kafka_consumer;
 // dependency-free so on-chain contracts and off-chain relayers share it.
 pub mod cross_chain;
 
+// Capacity planning for shard-pool nodes (issue #139). Each node runs a local
+// non-linear estimator (GC-pause + NUMA corrections) and forwards both raw
+// measurements and its locally-computed estimate to the global coordinator.
+// The coordinator applies a divergence correction factor and switches to the
+// conservative estimate when the two models diverge by more than 10% for 3
+// consecutive sync cycles.
+pub mod pool;
+
 // --- ERROR CODES ---
 
 #[contracterror]

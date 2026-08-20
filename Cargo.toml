@@ -57,3 +57,7 @@ path = "tests/kafka_consumer_lag_test.rs"
 [[test]]
 name = "light_client_finality_skew_test"
 path = "tests/light_client_finality_skew_test.rs"
+
+[[test]]
+name = "capacity_planning_divergence_test"
+path = "tests/capacity_planning_divergence_test.rs"
