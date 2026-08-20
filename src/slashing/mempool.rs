@@ -59,7 +59,7 @@ impl SlashingMempool {
     }
 
     pub fn drain_all(&mut self) -> Vec<Evidence> {
-        self.evidence.drain(..).collect()
+        core::mem::take(&mut self.evidence)
     }
 
     pub fn reset_epoch(&mut self) {
