@@ -247,8 +247,7 @@ print_summary() {
   echo "    cargo llvm-cov --workspace --all-targets --locked --fail-under-lines $COVERAGE_THRESHOLD --summary-only"
   echo "    scripts/pre-commit-quality.sh rustfmt src/lib.rs"
   echo ""
-  echo "  See docs/ for architecture details and README.md for"
-  echo "  project overview."
+  echo "  See CORE.md for architecture, API, and operations details."
   echo ""
   success "Onboarding complete! Happy coding."
 }

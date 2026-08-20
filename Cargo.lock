@@ -1405,7 +1405,6 @@ dependencies = [
 name = "sorosusu-contracts"
 version = "0.1.0"
 dependencies = [
- "arbitrary",
  "dlmalloc",
  "proptest",
  "soroban-sdk",

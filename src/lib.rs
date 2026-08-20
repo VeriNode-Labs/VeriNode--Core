@@ -70,6 +70,10 @@ pub mod replication;
 // Expired leases release jobs back for reclamation by other workers.
 pub mod job_scheduler;
 
+// Graceful degradation with feature flags and capacity shedding (issue #132).
+// Exposed for integration tests and off-chain monitoring helpers.
+pub mod graceful_degradation;
+
 // Incident response runbook automation and PagerDuty event preparation.
 // Deterministic, side-effect-free runbook selection and PagerDuty Events API
 // payload building for blue-green and canary deployment gate decisions.
@@ -104,8 +108,15 @@ pub mod secret_rotation;
 // lag, evaluating scaling policies, and producing canary-gated scale-out /
 // scale-in decisions.  All math is pure Rust so on-chain contracts, off-chain
 // monitoring agents, and blue-green deployment gates share the same thresholds.
-pub mod graceful_degradation;
 pub mod kafka_consumer;
+
+// Cross-chain light-client committee synchronization across heterogeneous
+// finality gadgets (issue #136). Derives per-chain sync timeout, sync interval,
+// and clock-drift budget from each chain's block time, verifies finality at the
+// 2/3+1 committee-weight threshold with a sync-drift grace period, and exports
+// a chain_finality_lag_ms gauge per connected chain. Deterministic and
+// dependency-free so on-chain contracts and off-chain relayers share it.
+pub mod cross_chain;
 
 // --- ERROR CODES ---
 

@@ -11,7 +11,8 @@
 
 extern crate alloc;
 
-use crate::mempool::{BuiltBlock, FeeAmount, Transaction};
+use crate::mempool::block_builder::BuiltBlock;
+use crate::mempool::priority_queue::{FeeAmount, Transaction};
 
 /// Opaque block-proposer / fee-recipient identifier.
 ///
@@ -88,7 +89,7 @@ pub fn finalize_block_fees(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mempool::TxHash;
+    use crate::mempool::priority_queue::TxHash;
 
     fn hash(id: u8) -> TxHash {
         let mut h = [0u8; 32];
