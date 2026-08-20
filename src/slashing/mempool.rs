@@ -20,8 +20,14 @@ pub const MAX_EVIDENCE_PER_VALIDATOR_PER_EPOCH: u8 = 1;
 const MEMPOOL_CAPACITY: usize = 1024;
 
 pub struct SlashingMempool {
-    evidence: Vec<Evidence>, 
+    evidence: Vec<Evidence>,
     rate_limits: BTreeMap<ValidatorIndex, u8>,
+}
+
+impl Default for SlashingMempool {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SlashingMempool {
@@ -33,8 +39,11 @@ impl SlashingMempool {
     }
 
     pub fn push_evidence(&mut self, evidence: Evidence) -> Result<(), OverflowError> {
-        let count = self.rate_limits.entry(evidence.validator_index).or_insert(0);
-        
+        let count = self
+            .rate_limits
+            .entry(evidence.validator_index)
+            .or_insert(0);
+
         if *count >= MAX_EVIDENCE_PER_VALIDATOR_PER_EPOCH {
             return Err(OverflowError::RateLimitReached);
         }
@@ -45,12 +54,12 @@ impl SlashingMempool {
 
         *count += 1;
         self.evidence.push(evidence);
-        
+
         Ok(())
     }
 
     pub fn drain_all(&mut self) -> Vec<Evidence> {
-        self.evidence.drain(..).collect()
+        core::mem::take(&mut self.evidence)
     }
 
     pub fn reset_epoch(&mut self) {

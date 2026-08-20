@@ -9,7 +9,9 @@ use sorosusu_contracts::attestation::key_registry::{
 use sorosusu_contracts::attestation::verifier::{
     sign_attestation, verify_attestation_signature, AttestationData,
 };
-use sorosusu_contracts::crypto::domain::{compute_domain, DOMAIN_BEACON_ATTESTER, GENESIS_FORK_VERSION};
+use sorosusu_contracts::crypto::domain::{
+    compute_domain, DOMAIN_BEACON_ATTESTER, GENESIS_FORK_VERSION,
+};
 
 use proptest::prelude::*;
 
@@ -46,7 +48,9 @@ fn rotation_window_accepts_old_and_new_keys() {
     let sig_new = sign_attestation(&NEW_KEY, &domain, &data);
 
     // Before rotation: old key verifies and is cached at gen 0.
-    assert!(verify_with_rotation(&mut cache, &registry, VALIDATOR, &domain, &data, &sig_old, 100));
+    assert!(verify_with_rotation(
+        &mut cache, &registry, VALIDATOR, &domain, &data, &sig_old, 100
+    ));
     assert_eq!(cache.cached_key_gen(VALIDATOR), Some(0));
 
     // Rotate to the new key at ledger 100.
@@ -54,15 +58,21 @@ fn rotation_window_accepts_old_and_new_keys() {
 
     // The poisoning failure mode: verifying the new attestation against the old
     // (stale) key fails.
-    assert!(!verify_attestation_signature(&OLD_KEY, &domain, &data, &sig_new));
+    assert!(!verify_attestation_signature(
+        &OLD_KEY, &domain, &data, &sig_new
+    ));
 
     // The fix: the versioned cache reloads (gen 0 -> 1) and the new attestation
     // verifies.
-    assert!(verify_with_rotation(&mut cache, &registry, VALIDATOR, &domain, &data, &sig_new, 101));
+    assert!(verify_with_rotation(
+        &mut cache, &registry, VALIDATOR, &domain, &data, &sig_new, 101
+    ));
     assert_eq!(cache.cached_key_gen(VALIDATOR), Some(1));
 
     // An in-flight old-key attestation still verifies within the window.
-    assert!(verify_with_rotation(&mut cache, &registry, VALIDATOR, &domain, &data, &sig_old, 102));
+    assert!(verify_with_rotation(
+        &mut cache, &registry, VALIDATOR, &domain, &data, &sig_old, 102
+    ));
 }
 
 /// Once the rotation window elapses, the old key is no longer accepted but the
@@ -81,8 +91,24 @@ fn old_key_expires_after_window() {
     let sig_new = sign_attestation(&NEW_KEY, &domain, &data);
 
     let after_window = 1_000 + ROTATION_WINDOW_LEDGERS;
-    assert!(!verify_with_rotation(&mut cache, &registry, VALIDATOR, &domain, &data, &sig_old, after_window));
-    assert!(verify_with_rotation(&mut cache, &registry, VALIDATOR, &domain, &data, &sig_new, after_window));
+    assert!(!verify_with_rotation(
+        &mut cache,
+        &registry,
+        VALIDATOR,
+        &domain,
+        &data,
+        &sig_old,
+        after_window
+    ));
+    assert!(verify_with_rotation(
+        &mut cache,
+        &registry,
+        VALIDATOR,
+        &domain,
+        &data,
+        &sig_new,
+        after_window
+    ));
 }
 
 /// Blueprint step 5: a rotation lands while a batch of verifications is in
@@ -117,7 +143,9 @@ fn unknown_validator_rejected() {
     let mut cache = VerificationCache::new();
     let registry = KeyRegistry::new();
     let sig = sign_attestation(&OLD_KEY, &domain, &data);
-    assert!(!verify_with_rotation(&mut cache, &registry, 99, &domain, &data, &sig, 0));
+    assert!(!verify_with_rotation(
+        &mut cache, &registry, 99, &domain, &data, &sig, 0
+    ));
 }
 
 proptest! {

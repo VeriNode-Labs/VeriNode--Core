@@ -39,13 +39,18 @@ fn chain_config(id: &str, block_time_ms: u64) -> ChainConfig {
 /// Smallest committee-sync tick (a multiple of `interval`) at or after
 /// `observed_at` — when the light client next processes finalization.
 fn next_sync_tick(interval: u64, observed_at: u64) -> u64 {
-    ((observed_at + interval - 1) / interval) * interval
+    observed_at.div_ceil(interval) * interval
 }
 
 /// Drives one chain through `blocks` blocks inside `registry`, injecting relay
 /// latency and keeping the committee freshly synced, and returns the maximum
 /// `chain_finality_lag_ms` gauge value observed across the run.
-fn simulate_chain(registry: &mut LightClientRegistry, chain_id: &str, block_time_ms: u64, blocks: u64) -> u64 {
+fn simulate_chain(
+    registry: &mut LightClientRegistry,
+    chain_id: &str,
+    block_time_ms: u64,
+    blocks: u64,
+) -> u64 {
     let interval = block_time_ms / SYNC_INTERVAL_DIVISOR;
     let mut max_lag = 0;
 
@@ -62,7 +67,13 @@ fn simulate_chain(registry: &mut LightClientRegistry, chain_id: &str, block_time
         registry
             .observe_header(
                 chain_id,
-                RecentHeader::new(height, produced_at, COMMITTEE_WEIGHT, ATTESTING_WEIGHT, observed_at),
+                RecentHeader::new(
+                    height,
+                    produced_at,
+                    COMMITTEE_WEIGHT,
+                    ATTESTING_WEIGHT,
+                    observed_at,
+                ),
             )
             .unwrap();
 
@@ -75,7 +86,10 @@ fn simulate_chain(registry: &mut LightClientRegistry, chain_id: &str, block_time
             "chain {chain_id} height {height} should finalize without drift"
         );
 
-        let lag = registry.chain(chain_id).unwrap().finality_lag_ms(finalized_at);
+        let lag = registry
+            .chain(chain_id)
+            .unwrap()
+            .finality_lag_ms(finalized_at);
         assert_eq!(
             lag,
             finalized_at - produced_at,
@@ -95,7 +109,9 @@ fn simulate_chain(registry: &mut LightClientRegistry, chain_id: &str, block_time
 fn two_heterogeneous_chains_keep_finality_lag_under_target() {
     let mut registry = LightClientRegistry::new();
     registry.connect(chain_config("fast-2s", 2_000), 0).unwrap();
-    registry.connect(chain_config("slow-15s", 15_000), 0).unwrap();
+    registry
+        .connect(chain_config("slow-15s", 15_000), 0)
+        .unwrap();
 
     let fast_max_lag = simulate_chain(&mut registry, "fast-2s", 2_000, 30);
     let slow_max_lag = simulate_chain(&mut registry, "slow-15s", 15_000, 30);
@@ -121,7 +137,9 @@ fn two_heterogeneous_chains_keep_finality_lag_under_target() {
 fn finality_lag_gauges_report_both_chains_within_target() {
     let mut registry = LightClientRegistry::new();
     registry.connect(chain_config("fast-2s", 2_000), 0).unwrap();
-    registry.connect(chain_config("slow-15s", 15_000), 0).unwrap();
+    registry
+        .connect(chain_config("slow-15s", 15_000), 0)
+        .unwrap();
 
     // Both chains observe and finalize a header whose block was produced at the
     // same wall-clock instant (100_000 ms) and observed after the 800 ms relay
@@ -175,12 +193,21 @@ fn stalled_sync_triggers_drift_and_grace_period_withholds_finality() {
     // is recorded, so staleness climbs past the 60 s sync timeout and drift is
     // declared. sync_timeout = max(3 * 2_000, 60_000) = 60_000 ms.
     registry
-        .observe_header("fast-2s", RecentHeader::new(1, 2_000, COMMITTEE_WEIGHT, ATTESTING_WEIGHT, 2_800))
+        .observe_header(
+            "fast-2s",
+            RecentHeader::new(1, 2_000, COMMITTEE_WEIGHT, ATTESTING_WEIGHT, 2_800),
+        )
         .unwrap();
 
     let chain = registry.chain("fast-2s").unwrap();
-    assert!(!chain.drift_detected(60_000), "no drift exactly at the timeout");
-    assert!(chain.drift_detected(60_001), "drift once staleness passes the timeout");
+    assert!(
+        !chain.drift_detected(60_000),
+        "no drift exactly at the timeout"
+    );
+    assert!(
+        chain.drift_detected(60_001),
+        "drift once staleness passes the timeout"
+    );
 
     // Under drift the header is withheld until the grace period elapses:
     // grace = 1.5 * 60_000 = 90_000 ms, measured from observation (2_800).
@@ -214,13 +241,13 @@ fn clock_skew_beyond_hop_budget_triggers_drift() {
 fn repeated_sync_failures_back_off_exponentially_and_cap() {
     let mut state = CommitteeSyncState::new("fast-2s".into(), 0);
     let expected = [
-        SYNC_BACKOFF_BASE_MS,       // 1 s
-        SYNC_BACKOFF_BASE_MS * 2,   // 2 s
-        SYNC_BACKOFF_BASE_MS * 4,   // 4 s
-        SYNC_BACKOFF_BASE_MS * 8,   // 8 s
-        SYNC_BACKOFF_BASE_MS * 16,  // 16 s
-        SYNC_BACKOFF_CAP_MS,        // capped at 30 s
-        SYNC_BACKOFF_CAP_MS,        // stays capped
+        SYNC_BACKOFF_BASE_MS,      // 1 s
+        SYNC_BACKOFF_BASE_MS * 2,  // 2 s
+        SYNC_BACKOFF_BASE_MS * 4,  // 4 s
+        SYNC_BACKOFF_BASE_MS * 8,  // 8 s
+        SYNC_BACKOFF_BASE_MS * 16, // 16 s
+        SYNC_BACKOFF_CAP_MS,       // capped at 30 s
+        SYNC_BACKOFF_CAP_MS,       // stays capped
     ];
     for exp in expected {
         state.record_outcome(SyncOutcome::Failure, 0);
@@ -239,12 +266,21 @@ fn repeated_sync_failures_back_off_exponentially_and_cap() {
 fn header_cache_retains_only_the_most_recent_headers() {
     let mut cache = HeaderCache::new();
     for height in 0..(HEADER_CACHE_CAPACITY as u64 * 2) {
-        cache.insert(RecentHeader::new(height, height * 2_000, COMMITTEE_WEIGHT, ATTESTING_WEIGHT, height * 2_000 + 800));
+        cache.insert(RecentHeader::new(
+            height,
+            height * 2_000,
+            COMMITTEE_WEIGHT,
+            ATTESTING_WEIGHT,
+            height * 2_000 + 800,
+        ));
     }
     assert_eq!(cache.len(), HEADER_CACHE_CAPACITY);
     assert_eq!(cache.capacity(), HEADER_CACHE_CAPACITY);
     // The newest header is retained; the oldest half was evicted.
-    assert_eq!(cache.latest().unwrap().height, HEADER_CACHE_CAPACITY as u64 * 2 - 1);
+    assert_eq!(
+        cache.latest().unwrap().height,
+        HEADER_CACHE_CAPACITY as u64 * 2 - 1
+    );
     assert!(cache.get(0).is_none());
 }
 
@@ -254,17 +290,35 @@ fn header_cache_retains_only_the_most_recent_headers() {
 
 #[test]
 fn finality_threshold_is_two_thirds_plus_one_of_committee_weight() {
-    assert_eq!(FinalityVerifier::finality_threshold_weight(COMMITTEE_WEIGHT), 67);
-    assert!(!FinalityVerifier::meets_finality_threshold(66, COMMITTEE_WEIGHT));
-    assert!(FinalityVerifier::meets_finality_threshold(67, COMMITTEE_WEIGHT));
+    assert_eq!(
+        FinalityVerifier::finality_threshold_weight(COMMITTEE_WEIGHT),
+        67
+    );
+    assert!(!FinalityVerifier::meets_finality_threshold(
+        66,
+        COMMITTEE_WEIGHT
+    ));
+    assert!(FinalityVerifier::meets_finality_threshold(
+        67,
+        COMMITTEE_WEIGHT
+    ));
 }
 
 #[test]
 fn connected_chain_can_be_built_and_finalized_directly() {
     let mut chain = ConnectedChain::new(chain_config("solo", 2_000), 0);
     chain.record_sync(SyncOutcome::Success, 2_800);
-    chain.observe_header(RecentHeader::new(1, 2_000, COMMITTEE_WEIGHT, ATTESTING_WEIGHT, 2_800));
-    assert_eq!(chain.try_finalize_latest(3_000), FinalityDecision::Finalized);
+    chain.observe_header(RecentHeader::new(
+        1,
+        2_000,
+        COMMITTEE_WEIGHT,
+        ATTESTING_WEIGHT,
+        2_800,
+    ));
+    assert_eq!(
+        chain.try_finalize_latest(3_000),
+        FinalityDecision::Finalized
+    );
     assert_eq!(chain.finalized_height(), Some(1));
     assert_eq!(chain.finality_lag_ms(3_000), 1_000);
 }

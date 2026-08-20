@@ -2,11 +2,10 @@
 //! shedding (issue #132).
 
 use sorosusu_contracts::graceful_degradation::{
-    CanaryError, CanaryGate, CapacitySensor, DegradationConfig, DegradationDecision,
-    DegradationPolicy, DeploymentStage, DeploymentStageRegistry, FeatureFlag, FeatureFlagSet,
-    FlagError, FlagState, dashboard_snapshot, AVAILABILITY_TARGET_BPS,
-    CANARY_SUCCESS_TARGET_BPS, CRITICAL_PATH_P99_TARGET_MS, DEFAULT_HARD_SHED_THRESHOLD_BPS,
-    DEFAULT_SHEDDING_THRESHOLD_BPS,
+    dashboard_snapshot, CanaryError, CanaryGate, CapacitySensor, DegradationConfig,
+    DegradationDecision, DegradationPolicy, DeploymentStage, DeploymentStageRegistry, FeatureFlag,
+    FeatureFlagSet, FlagError, FlagState, AVAILABILITY_TARGET_BPS, CANARY_SUCCESS_TARGET_BPS,
+    CRITICAL_PATH_P99_TARGET_MS, DEFAULT_HARD_SHED_THRESHOLD_BPS, DEFAULT_SHEDDING_THRESHOLD_BPS,
 };
 
 // ---------------------------------------------------------------------------
@@ -184,13 +183,11 @@ fn latency_violation_triggers_above_p99_target() {
         in_flight_requests: 0,
     };
     assert!(!ok.latency_violated());
-    assert!(
-        CapacitySensor {
-            p99_latency_ms: CRITICAL_PATH_P99_TARGET_MS + 1,
-            ..ok
-        }
-        .latency_violated()
-    );
+    assert!(CapacitySensor {
+        p99_latency_ms: CRITICAL_PATH_P99_TARGET_MS + 1,
+        ..ok
+    }
+    .latency_violated());
 }
 
 // ---------------------------------------------------------------------------
@@ -201,7 +198,13 @@ fn latency_violation_triggers_above_p99_target() {
 fn full_service_when_healthy_and_flag_enabled() {
     let flags = flags_with(enabled_flag("consensus"));
     assert_eq!(
-        DegradationPolicy::evaluate("consensus", false, &healthy_sensor(), &flags, &default_config()),
+        DegradationPolicy::evaluate(
+            "consensus",
+            false,
+            &healthy_sensor(),
+            &flags,
+            &default_config()
+        ),
         DegradationDecision::FullService
     );
 }
@@ -210,7 +213,13 @@ fn full_service_when_healthy_and_flag_enabled() {
 fn degraded_fallback_when_flag_is_disabled() {
     let flags = flags_with(FeatureFlag::new("consensus".into()));
     assert_eq!(
-        DegradationPolicy::evaluate("consensus", false, &healthy_sensor(), &flags, &default_config()),
+        DegradationPolicy::evaluate(
+            "consensus",
+            false,
+            &healthy_sensor(),
+            &flags,
+            &default_config()
+        ),
         DegradationDecision::DegradedFallback
     );
 }
@@ -218,7 +227,10 @@ fn degraded_fallback_when_flag_is_disabled() {
 #[test]
 fn degraded_fallback_when_global_flags_disabled() {
     let flags = flags_with(enabled_flag("consensus"));
-    let cfg = DegradationConfig { flags_enabled: false, ..default_config() };
+    let cfg = DegradationConfig {
+        flags_enabled: false,
+        ..default_config()
+    };
     assert_eq!(
         DegradationPolicy::evaluate("consensus", false, &healthy_sensor(), &flags, &cfg),
         DegradationDecision::DegradedFallback
@@ -261,7 +273,10 @@ fn hard_shed_takes_priority_over_all_other_rules() {
         p99_latency_ms: 50,
         in_flight_requests: 0,
     };
-    let cfg = DegradationConfig { flags_enabled: false, ..default_config() };
+    let cfg = DegradationConfig {
+        flags_enabled: false,
+        ..default_config()
+    };
     assert_eq!(
         DegradationPolicy::evaluate("any", false, &sensor, &flags, &cfg),
         DegradationDecision::ShedLoad
@@ -294,11 +309,23 @@ fn canary_flag_gives_full_service_to_canary_traffic_only() {
         .unwrap();
 
     assert_eq!(
-        DegradationPolicy::evaluate("fast-path", true, &healthy_sensor(), &flags, &default_config()),
+        DegradationPolicy::evaluate(
+            "fast-path",
+            true,
+            &healthy_sensor(),
+            &flags,
+            &default_config()
+        ),
         DegradationDecision::FullService
     );
     assert_eq!(
-        DegradationPolicy::evaluate("fast-path", false, &healthy_sensor(), &flags, &default_config()),
+        DegradationPolicy::evaluate(
+            "fast-path",
+            false,
+            &healthy_sensor(),
+            &flags,
+            &default_config()
+        ),
         DegradationDecision::DegradedFallback
     );
 }
@@ -413,11 +440,26 @@ fn canary_zero_requests_yields_zero_rate() {
 
 #[test]
 fn deployment_stage_sequence_is_correct() {
-    assert_eq!(DeploymentStage::Development.next(), DeploymentStage::BlueGreenShadow);
-    assert_eq!(DeploymentStage::BlueGreenShadow.next(), DeploymentStage::CanaryOnePercent);
-    assert_eq!(DeploymentStage::CanaryOnePercent.next(), DeploymentStage::CanaryTenPercent);
-    assert_eq!(DeploymentStage::CanaryTenPercent.next(), DeploymentStage::FullRollout);
-    assert_eq!(DeploymentStage::FullRollout.next(), DeploymentStage::FullRollout);
+    assert_eq!(
+        DeploymentStage::Development.next(),
+        DeploymentStage::BlueGreenShadow
+    );
+    assert_eq!(
+        DeploymentStage::BlueGreenShadow.next(),
+        DeploymentStage::CanaryOnePercent
+    );
+    assert_eq!(
+        DeploymentStage::CanaryOnePercent.next(),
+        DeploymentStage::CanaryTenPercent
+    );
+    assert_eq!(
+        DeploymentStage::CanaryTenPercent.next(),
+        DeploymentStage::FullRollout
+    );
+    assert_eq!(
+        DeploymentStage::FullRollout.next(),
+        DeploymentStage::FullRollout
+    );
 }
 
 #[test]
@@ -436,21 +478,27 @@ fn only_canary_stages_return_is_canary_true() {
 #[test]
 fn registry_promotes_pre_canary_stages_without_gate() {
     let mut reg = DeploymentStageRegistry::new();
-    reg.set_stage("feat".into(), DeploymentStage::Development).unwrap();
-    assert_eq!(reg.promote("feat", None).unwrap(), DeploymentStage::BlueGreenShadow);
+    reg.set_stage("feat".into(), DeploymentStage::Development)
+        .unwrap();
+    assert_eq!(
+        reg.promote("feat", None).unwrap(),
+        DeploymentStage::BlueGreenShadow
+    );
 }
 
 #[test]
 fn registry_rejects_canary_promotion_without_gate() {
     let mut reg = DeploymentStageRegistry::new();
-    reg.set_stage("feat".into(), DeploymentStage::CanaryOnePercent).unwrap();
+    reg.set_stage("feat".into(), DeploymentStage::CanaryOnePercent)
+        .unwrap();
     assert_eq!(reg.promote("feat", None), Err(CanaryError::CanaryFailed));
 }
 
 #[test]
 fn registry_promotes_canary_stage_with_passing_gate() {
     let mut reg = DeploymentStageRegistry::new();
-    reg.set_stage("feat".into(), DeploymentStage::CanaryOnePercent).unwrap();
+    reg.set_stage("feat".into(), DeploymentStage::CanaryOnePercent)
+        .unwrap();
     assert_eq!(
         reg.promote("feat", Some(&passing_canary())).unwrap(),
         DeploymentStage::CanaryTenPercent
@@ -460,21 +508,27 @@ fn registry_promotes_canary_stage_with_passing_gate() {
 #[test]
 fn registry_rejects_canary_promotion_with_failing_gate() {
     let mut reg = DeploymentStageRegistry::new();
-    reg.set_stage("feat".into(), DeploymentStage::CanaryTenPercent).unwrap();
+    reg.set_stage("feat".into(), DeploymentStage::CanaryTenPercent)
+        .unwrap();
     let bad = CanaryGate {
         requests: 1_000,
         successful_requests: 900,
         p99_latency_ms: 50,
         security_review_passed: true,
     };
-    assert_eq!(reg.promote("feat", Some(&bad)), Err(CanaryError::CanaryFailed));
+    assert_eq!(
+        reg.promote("feat", Some(&bad)),
+        Err(CanaryError::CanaryFailed)
+    );
 }
 
 #[test]
 fn registry_snapshot_is_sorted_by_feature_name() {
     let mut reg = DeploymentStageRegistry::new();
-    reg.set_stage("z-feature".into(), DeploymentStage::Development).unwrap();
-    reg.set_stage("a-feature".into(), DeploymentStage::FullRollout).unwrap();
+    reg.set_stage("z-feature".into(), DeploymentStage::Development)
+        .unwrap();
+    reg.set_stage("a-feature".into(), DeploymentStage::FullRollout)
+        .unwrap();
 
     let snap = reg.snapshot();
     assert_eq!(snap.len(), 2);

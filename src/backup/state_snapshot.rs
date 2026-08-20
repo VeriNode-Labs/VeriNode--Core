@@ -7,10 +7,10 @@
 //! detect discrepancies.
 
 extern crate alloc;
+use crate::crypto::merkle::Hash256;
+use crate::crypto::sha256::sha256;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use crate::crypto::sha256::sha256;
-use crate::crypto::merkle::Hash256;
 
 // --- CONSTANTS ---
 
@@ -241,7 +241,11 @@ pub enum RestoreResult {
     /// The restored state matches the snapshot.
     Success,
     /// Mismatch found in the given chunk.
-    ChunkMismatch { chunk_id: u64, expected_hash: Hash256, actual_hash: Hash256 },
+    ChunkMismatch {
+        chunk_id: u64,
+        expected_hash: Hash256,
+        actual_hash: Hash256,
+    },
     /// The expected snapshot was not found.
     SnapshotMissing,
 }
@@ -421,10 +425,7 @@ mod tests {
     #[test]
     fn test_restore_missing_snapshot() {
         let s = BackupScheduler::new();
-        assert_eq!(
-            test_restore(&s, 999, &[]),
-            RestoreResult::SnapshotMissing
-        );
+        assert_eq!(test_restore(&s, 999, &[]), RestoreResult::SnapshotMissing);
     }
 
     #[test]
@@ -440,10 +441,9 @@ mod tests {
     #[test]
     fn test_snapshot_exceeds_max_chunks() {
         let mut s = BackupScheduler::with_interval(1);
-        let too_many: Vec<(u64, &[u8])> =
-            (0..=MAX_CHUNKS_PER_SNAPSHOT as u64)
-                .map(|i| (i, &b"x"[..]))
-                .collect();
+        let too_many: Vec<(u64, &[u8])> = (0..=MAX_CHUNKS_PER_SNAPSHOT as u64)
+            .map(|i| (i, &b"x"[..]))
+            .collect();
         assert!(s.take_snapshot(0, 0, &too_many).is_none());
     }
 }

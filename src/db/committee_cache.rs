@@ -6,9 +6,9 @@
 //! that may be using either root.
 
 extern crate alloc;
-use alloc::collections::BTreeMap;
 use crate::crypto::merkle::Hash256;
 use crate::validator::committee_assignment::{CommitteeView, SLOTS_PER_EPOCH};
+use alloc::collections::BTreeMap;
 
 /// A cache entry that may contain one or two committee roots.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -183,7 +183,10 @@ mod tests {
         // During reorg window: ambiguous view
         let view = cache.get_committee_view(epoch, trigger_slot + 1);
         match view {
-            Some(CommitteeView::Ambiguous { old_root: o, new_root: n }) => {
+            Some(CommitteeView::Ambiguous {
+                old_root: o,
+                new_root: n,
+            }) => {
                 assert_eq!(o, old_root);
                 assert_eq!(n, new_root);
             }
@@ -232,9 +235,13 @@ mod tests {
         assert_eq!(cache.len(), 3);
 
         // Epoch 100 should be evicted
-        assert!(cache.get_committee_view(100, 100 * SLOTS_PER_EPOCH).is_none());
+        assert!(cache
+            .get_committee_view(100, 100 * SLOTS_PER_EPOCH)
+            .is_none());
         // Epoch 101-103 should still be present
-        assert!(cache.get_committee_view(101, 101 * SLOTS_PER_EPOCH).is_some());
+        assert!(cache
+            .get_committee_view(101, 101 * SLOTS_PER_EPOCH)
+            .is_some());
     }
 
     #[test]

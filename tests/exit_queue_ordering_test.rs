@@ -46,7 +46,7 @@ fn rejects_duplicates_and_respects_capacity() {
     q.push_exit(10, 1).unwrap();
     assert_eq!(q.push_exit(10, 1), Err(ExitQueueError::DuplicateExit));
     assert_eq!(q.len(), 1);
-    assert!(MAX_EXIT_QUEUE_LENGTH == 16_384);
+    const _: () = assert!(MAX_EXIT_QUEUE_LENGTH == 16_384);
 }
 
 /// `drain_eligible` only releases exits at or before the current epoch, in order.

@@ -107,7 +107,7 @@ impl BalanceTracker {
 
     /// Return `true` if the validator has any outstanding debt.
     pub fn has_debt(&self, validator_index: ValidatorIndex) -> bool {
-        self.debts.get(&validator_index).map_or(false, |&d| d > 0)
+        self.debts.get(&validator_index).is_some_and(|&d| d > 0)
     }
 
     // -----------------------------------------------------------------------

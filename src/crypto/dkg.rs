@@ -131,7 +131,9 @@ impl DistributedKeyGeneration {
 
         // For the model, we just return the first key as a placeholder
         // Real implementation would properly aggregate all public keys
-        self.round1_messages.first().map(|msg| msg.shared_public_key)
+        self.round1_messages
+            .first()
+            .map(|msg| msg.shared_public_key)
     }
 }
 

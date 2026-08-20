@@ -77,11 +77,17 @@ impl SlashingRewardPool {
             &SlashingDataKey::RewardPerValidator(event_id),
             &reward_per_validator,
         );
-        storage.set(&SlashingDataKey::PoolReporterCount(event_id), &reporter_count);
+        storage.set(
+            &SlashingDataKey::PoolReporterCount(event_id),
+            &reporter_count,
+        );
         storage.set(&SlashingDataKey::PoolClaimedCount(event_id), &0u32);
 
         for reporter in reporters.iter() {
-            storage.set(&SlashingDataKey::PoolReporter(event_id, reporter.clone()), &true);
+            storage.set(
+                &SlashingDataKey::PoolReporter(event_id, reporter.clone()),
+                &true,
+            );
         }
 
         true
@@ -92,11 +98,7 @@ impl SlashingRewardPool {
     /// The marker write, claimed-count bump, and pool decrement happen together
     /// in a single invocation, so concurrent (serialized) claims each observe a
     /// consistent pool and can never double-withdraw.
-    pub fn claim_reward(
-        env: &Env,
-        event_id: u64,
-        validator: &Address,
-    ) -> Result<i128, ClaimError> {
+    pub fn claim_reward(env: &Env, event_id: u64, validator: &Address) -> Result<i128, ClaimError> {
         let pool_key = SlashingDataKey::RewardPool(event_id);
         let pool_remaining: i128 = match env.storage().instance().get(&pool_key) {
             Some(balance) => balance,

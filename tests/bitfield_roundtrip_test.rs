@@ -7,7 +7,9 @@ use sorosusu_contracts::attestation::bitfield::AttestationBitfield;
 use sorosusu_contracts::attestation::verifier::{
     sign_attestation, verify_attestation, AttestationData,
 };
-use sorosusu_contracts::crypto::domain::{compute_domain, DOMAIN_BEACON_ATTESTER, GENESIS_FORK_VERSION};
+use sorosusu_contracts::crypto::domain::{
+    compute_domain, DOMAIN_BEACON_ATTESTER, GENESIS_FORK_VERSION,
+};
 use sorosusu_contracts::network::ssz_codec::{
     decode_attestation_data, encode_attestation_data, ATTESTATION_DATA_SSZ_LEN,
 };
@@ -56,7 +58,7 @@ fn bitfield_roundtrip_fixed() {
         bf.set(i, true).unwrap();
     }
     let wire = bf.to_ssz_bytes();
-    assert_eq!(wire.len(), (20 + 7) / 8);
+    assert_eq!(wire.len(), 20_usize.div_ceil(8));
 
     let decoded = AttestationBitfield::from_ssz_bytes(&wire, 20).unwrap();
     assert_eq!(decoded, bf);
@@ -99,9 +101,10 @@ fn attestation_data_ssz_roundtrip() {
     let decoded = decode_attestation_data(&encoded).unwrap();
     assert_eq!(decoded, data);
 
-    assert_eq!(decode_attestation_data(&[0u8; 1]), Err(
-        sorosusu_contracts::network::ssz_codec::SszError::InvalidLength
-    ));
+    assert_eq!(
+        decode_attestation_data(&[0u8; 1]),
+        Err(sorosusu_contracts::network::ssz_codec::SszError::InvalidLength)
+    );
 }
 
 proptest! {
@@ -115,7 +118,7 @@ proptest! {
         }
 
         let wire = bf.to_ssz_bytes();
-        prop_assert_eq!(wire.len(), (bits.len() + 7) / 8);
+        prop_assert_eq!(wire.len(), bits.len().div_ceil(8));
 
         let decoded = AttestationBitfield::from_ssz_bytes(&wire, bits.len()).unwrap();
         for (i, b) in bits.iter().enumerate() {

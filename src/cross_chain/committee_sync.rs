@@ -183,7 +183,7 @@ mod tests {
         let config = cfg(2_000, 1); // interval = 500 ms
         let mut s = state();
         s.record_outcome(SyncOutcome::Failure, 0); // backoff = 1_000 ms
-        // Next sync is interval (500) + backoff (1_000) after last success (0).
+                                                   // Next sync is interval (500) + backoff (1_000) after last success (0).
         assert_eq!(s.next_sync_due_ms(&config), 1_500);
         assert!(!s.due_for_sync(&config, 1_499));
         assert!(s.due_for_sync(&config, 1_500));

@@ -163,7 +163,10 @@ mod tests {
         // The ten oldest heights (0..10) were evicted.
         assert!(cache.get(9).is_none());
         assert!(cache.get(10).is_some());
-        assert_eq!(cache.latest().unwrap().height, HEADER_CACHE_CAPACITY as u64 + 9);
+        assert_eq!(
+            cache.latest().unwrap().height,
+            HEADER_CACHE_CAPACITY as u64 + 9
+        );
     }
 
     #[test]

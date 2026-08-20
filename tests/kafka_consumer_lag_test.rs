@@ -127,7 +127,10 @@ fn monitor_classifies_critical_above_scaleout_threshold() {
 fn monitor_recommends_scale_out_when_lag_critical() {
     let g = group("g", 4, vec![partition("t", 0, 980_000, 1_000_000)]);
     let eval = ConsumerLagMonitor::evaluate_lag(&g, &default_config(), 0, None);
-    assert_eq!(eval.scaling_decision, ScalingDecision::ScaleOut { delta: 1 });
+    assert_eq!(
+        eval.scaling_decision,
+        ScalingDecision::ScaleOut { delta: 1 }
+    );
 }
 
 #[test]
@@ -147,7 +150,10 @@ fn monitor_no_change_when_lag_is_in_warning_zone() {
 
 #[test]
 fn monitor_no_change_at_max_consumers_despite_critical_lag() {
-    let config = ScalingConfig { max_consumers: 4, ..default_config() };
+    let config = ScalingConfig {
+        max_consumers: 4,
+        ..default_config()
+    };
     let g = group("g", 4, vec![partition("t", 0, 980_000, 1_000_000)]);
     let eval = ConsumerLagMonitor::evaluate_lag(&g, &config, 0, None);
     assert_eq!(eval.scaling_decision, ScalingDecision::NoChange);
@@ -155,7 +161,10 @@ fn monitor_no_change_at_max_consumers_despite_critical_lag() {
 
 #[test]
 fn monitor_no_change_at_min_consumers_despite_low_lag() {
-    let config = ScalingConfig { min_consumers: 2, ..default_config() };
+    let config = ScalingConfig {
+        min_consumers: 2,
+        ..default_config()
+    };
     let g = group("g", 2, vec![partition("t", 0, 999_900, 1_000_000)]); // lag=100
     let eval = ConsumerLagMonitor::evaluate_lag(&g, &config, 0, None);
     assert_eq!(eval.scaling_decision, ScalingDecision::NoChange);
@@ -176,7 +185,10 @@ fn monitor_allows_scaling_after_cooldown_expires() {
     let now = 2_000u64;
     let last_at = Some(now - 61); // 61 s ago — cooldown elapsed
     let eval = ConsumerLagMonitor::evaluate_lag(&g, &default_config(), now, last_at);
-    assert_eq!(eval.scaling_decision, ScalingDecision::ScaleOut { delta: 1 });
+    assert_eq!(
+        eval.scaling_decision,
+        ScalingDecision::ScaleOut { delta: 1 }
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -290,7 +302,10 @@ fn auto_scaler_records_timestamp_after_scale_out() {
     let g = group("pay", 2, vec![partition("t", 0, 980_000, 1_000_000)]);
 
     let eval = scaler.recommend_scale(&g, 1_000).unwrap();
-    assert_eq!(eval.scaling_decision, ScalingDecision::ScaleOut { delta: 1 });
+    assert_eq!(
+        eval.scaling_decision,
+        ScalingDecision::ScaleOut { delta: 1 }
+    );
     assert_eq!(scaler.last_scaling_at("pay"), Some(1_000));
 }
 
@@ -310,7 +325,10 @@ fn auto_scaler_enforces_cooldown_on_consecutive_calls() {
 
 #[test]
 fn auto_scaler_no_change_when_at_max_consumers() {
-    let config = ScalingConfig { max_consumers: 2, ..default_config() };
+    let config = ScalingConfig {
+        max_consumers: 2,
+        ..default_config()
+    };
     let mut scaler = ConsumerAutoScaler::new(config);
     let g = group("pay", 2, vec![partition("t", 0, 980_000, 1_000_000)]);
 
@@ -327,7 +345,10 @@ fn auto_scaler_reset_cooldown_allows_immediate_subsequent_scale() {
     scaler.reset_cooldown("pay");
 
     let eval = scaler.recommend_scale(&g, 1_001).unwrap();
-    assert_eq!(eval.scaling_decision, ScalingDecision::ScaleOut { delta: 1 });
+    assert_eq!(
+        eval.scaling_decision,
+        ScalingDecision::ScaleOut { delta: 1 }
+    );
 }
 
 #[test]

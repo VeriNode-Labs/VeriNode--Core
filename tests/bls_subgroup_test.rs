@@ -98,7 +98,10 @@ fn aggregate_rejects_any_low_order_member() {
     let cfg = SignatureVerifierConfig::default();
 
     let good_pks = [subgroup_member(1), subgroup_member(2)];
-    let good_sigs = [sign_message(&good_pks[0], MSG), sign_message(&good_pks[1], MSG)];
+    let good_sigs = [
+        sign_message(&good_pks[0], MSG),
+        sign_message(&good_pks[1], MSG),
+    ];
     assert!(verify_aggregate(cfg, &good_pks, MSG, &good_sigs));
 
     let mixed_pks = [subgroup_member(1), low_order_point(2)];

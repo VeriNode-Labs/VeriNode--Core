@@ -152,10 +152,13 @@ impl ReputationLedger {
 
     /// Number of recorded events for `node` (including the initial seed).
     pub fn event_count(&self, node: NodeId) -> usize {
-        self.events.get(&node).map(|events| events.len()).unwrap_or(0)
+        self.events
+            .get(&node)
+            .map(|events| events.len())
+            .unwrap_or(0)
     }
 
     fn push_event(&mut self, node: NodeId, event: ReputationEvent) {
-        self.events.entry(node).or_insert_with(Vec::new).push(event);
+        self.events.entry(node).or_default().push(event);
     }
 }

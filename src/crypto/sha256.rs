@@ -24,14 +24,13 @@ pub fn sha256(input: &[u8]) -> [u8; 32] {
     let bit_len = (input.len() as u64).wrapping_mul(8);
 
     // Process every full 64-byte block.
-    let mut chunks = input.chunks_exact(64);
-    for block in &mut chunks {
+    let (blocks, rem) = input.as_chunks::<64>();
+    for block in blocks {
         process_block(&mut h, block);
     }
 
     // Pad the remainder: 0x80 byte, zeros, then the 64-bit big-endian length.
     // The padded tail is at most two blocks (128 bytes).
-    let rem = chunks.remainder();
     let rem_len = rem.len();
     let mut tail = [0u8; 128];
     tail[..rem_len].copy_from_slice(rem);

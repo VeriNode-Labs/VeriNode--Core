@@ -85,9 +85,7 @@ use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{Address, Bytes, BytesN, Env, Vec};
 
 use super::merkle;
-use super::{
-    Commitment, SettlementDataKey, SettlementError, SettlementLeaf, MAX_BATCH_SIZE,
-};
+use super::{Commitment, SettlementDataKey, SettlementError, SettlementLeaf, MAX_BATCH_SIZE};
 use crate::slashing_core::slashing::SlashingDataKey;
 
 /// Minimum age (seconds) a commitment must reach before it can be revealed.
@@ -230,7 +228,8 @@ impl PoolManager {
                 return Err(SettlementError::ProofTooDeep);
             }
 
-            let leaf_hash = merkle::hash_leaf(env, &encode_leaf(env, &leaf.node_id, leaf.penalty_amount));
+            let leaf_hash =
+                merkle::hash_leaf(env, &encode_leaf(env, &leaf.node_id, leaf.penalty_amount));
             if !merkle::verify_proof(env, &leaf_hash, &leaf.proof, leaf.index, root) {
                 return Err(SettlementError::InvalidProof);
             }
@@ -250,7 +249,9 @@ impl PoolManager {
             let pool_balance: i128 = env.storage().instance().get(&pool_key).unwrap_or(0);
             let debited = leaf.penalty_amount.min(pool_balance).max(0);
             if debited > 0 {
-                env.storage().instance().set(&pool_key, &(pool_balance - debited));
+                env.storage()
+                    .instance()
+                    .set(&pool_key, &(pool_balance - debited));
             }
             total_slashed += debited;
         }

@@ -171,7 +171,7 @@ pub fn validate_config(config: &SystemConfig) -> Result<(), ConfigError> {
         if service.name.len() > MAX_SERVICE_NAME_LEN {
             return Err(ConfigError::ServiceNameTooLong);
         }
-        if seen.iter().any(|name| *name == service.name.as_str()) {
+        if seen.contains(&service.name.as_str()) {
             return Err(ConfigError::DuplicateServiceName);
         }
         seen.push(service.name.as_str());
@@ -189,7 +189,7 @@ fn service_changed(current: &[ServiceConfig], candidate: &ServiceConfig) -> bool
     current
         .iter()
         .find(|service| service.name == candidate.name)
-        .map_or(true, |service| service != candidate)
+        != Some(candidate)
 }
 
 fn changed_services(current: &[ServiceConfig], candidate: &[ServiceConfig]) -> Vec<String> {

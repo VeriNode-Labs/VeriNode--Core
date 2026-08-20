@@ -9,13 +9,13 @@ pub enum ReentrancyGuardKey {
 }
 
 /// Reentrancy guard implementation following OpenZeppelin pattern.
-/// 
+///
 /// This guard protects against reentrancy attacks by tracking whether
 /// a protected function is currently being executed. If a reentrant call
 /// is detected, it will panic.
-/// 
+///
 /// # Usage
-/// 
+///
 /// ```ignore
 /// let guard = ReentrancyGuard::new(env);
 /// // Protected code here
@@ -27,9 +27,9 @@ pub struct ReentrancyGuard<'a> {
 
 impl<'a> ReentrancyGuard<'a> {
     /// Creates a new reentrancy guard. Panics if a reentrant call is detected.
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// Panics with "ReentrancyGuard: reentrant call" if the guard is already active.
     pub fn new(env: &'a Env) -> Self {
         let entered: bool = env
