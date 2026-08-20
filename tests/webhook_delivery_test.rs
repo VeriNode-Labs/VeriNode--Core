@@ -3,15 +3,14 @@
 //! Exercises signing, verification, delivery engine enqueue/dequeue lifecycle,
 //! exponential backoff scheduling, and idempotency guarantees.
 
-use sorosusu_contracts::webhook::delivery::{
-    DeliveryEngine, DeliveryStatus, WebhookPayload, compute_backoff,
-    MAX_BACKOFF_SECONDS, MAX_RETRY_ATTEMPTS, BASE_BACKOFF_SECONDS,
-};
 use sorosusu_contracts::crypto::bls_keys::{
-    G2Point, scalar_mul, subgroup_check_g2,
-    low_order_point,
+    low_order_point, scalar_mul, subgroup_check_g2, G2Point,
 };
 use sorosusu_contracts::crypto::domain::compute_domain;
+use sorosusu_contracts::webhook::delivery::{
+    compute_backoff, DeliveryEngine, DeliveryStatus, WebhookPayload, BASE_BACKOFF_SECONDS,
+    MAX_BACKOFF_SECONDS, MAX_RETRY_ATTEMPTS,
+};
 
 const FORK: [u8; 4] = [0x00, 0x00, 0x00, 0x01];
 
@@ -181,10 +180,10 @@ fn test_delivery_error_persistence() {
 #[test]
 fn test_compute_backoff_values() {
     assert_eq!(compute_backoff(1), BASE_BACKOFF_SECONDS); // 2 * 2^0
-    assert_eq!(compute_backoff(2), 4);                    // 2 * 2^1
-    assert_eq!(compute_backoff(3), 8);                    // 2 * 2^2
-    assert_eq!(compute_backoff(4), 16);                   // 2 * 2^3
-    assert_eq!(compute_backoff(5), 32);                   // 2 * 2^4
+    assert_eq!(compute_backoff(2), 4); // 2 * 2^1
+    assert_eq!(compute_backoff(3), 8); // 2 * 2^2
+    assert_eq!(compute_backoff(4), 16); // 2 * 2^3
+    assert_eq!(compute_backoff(5), 32); // 2 * 2^4
 }
 
 #[test]

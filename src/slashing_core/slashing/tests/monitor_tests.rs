@@ -1,9 +1,10 @@
-use soroban_sdk::{testutils::{Address as _, Ledger}, Address, Env, Vec};
+use soroban_sdk::{
+    testutils::{Address as _, Ledger},
+    Address, Env, Vec,
+};
 
 use crate::slashing_core::slashing::{
-    event_store::SlashingEventStore,
-    executor::SlashingExecutor,
-    monitor::SlashingMonitor,
+    event_store::SlashingEventStore, executor::SlashingExecutor, monitor::SlashingMonitor,
     NodeState, SlashingDataKey, SlashingEvent, SlashingEventStatus, SlashingReason,
     NODE_BOND_AMOUNT, SCAN_INTERVAL_SECONDS, SLASHING_PENALTY,
 };
@@ -84,7 +85,10 @@ fn test_multi_condition_creates_single_event_with_all_reasons() {
         // INVARIANT: Event contains BOTH reasons
         assert_eq!(event.reasons.len(), 2);
         assert_eq!(event.reasons.get(0).unwrap(), SlashingReason::DoubleSigning);
-        assert_eq!(event.reasons.get(1).unwrap(), SlashingReason::ExtendedDowntime);
+        assert_eq!(
+            event.reasons.get(1).unwrap(),
+            SlashingReason::ExtendedDowntime
+        );
 
         // INVARIANT: Penalty applied exactly once
         let final_balance = SlashingExecutor::get_bond_balance(&env, &node_id);
@@ -114,7 +118,10 @@ fn test_triple_condition_creates_single_event() {
         let event = events.get(0).unwrap();
         assert_eq!(event.reasons.len(), 3);
         assert_eq!(event.reasons.get(0).unwrap(), SlashingReason::DoubleSigning);
-        assert_eq!(event.reasons.get(1).unwrap(), SlashingReason::ExtendedDowntime);
+        assert_eq!(
+            event.reasons.get(1).unwrap(),
+            SlashingReason::ExtendedDowntime
+        );
         assert_eq!(event.reasons.get(2).unwrap(), SlashingReason::FraudProof);
 
         // Bond deducted exactly once
@@ -176,7 +183,8 @@ fn test_node_can_be_slashed_again_after_interval() {
     });
 
     // Advance time beyond the scan interval
-    env.ledger().set_timestamp(1_000_000 + SCAN_INTERVAL_SECONDS + 1);
+    env.ledger()
+        .set_timestamp(1_000_000 + SCAN_INTERVAL_SECONDS + 1);
 
     env.as_contract(&contract_id, || {
         // Reset slashed status for re-activation (simulating node re-bonding)
@@ -361,7 +369,10 @@ fn test_single_extended_downtime_condition() {
         assert_eq!(events.len(), 1);
         let event = events.get(0).unwrap();
         assert_eq!(event.reasons.len(), 1);
-        assert_eq!(event.reasons.get(0).unwrap(), SlashingReason::ExtendedDowntime);
+        assert_eq!(
+            event.reasons.get(0).unwrap(),
+            SlashingReason::ExtendedDowntime
+        );
     });
 }
 

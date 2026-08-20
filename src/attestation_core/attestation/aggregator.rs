@@ -145,10 +145,7 @@ mod tests {
 
     #[test]
     fn test_aggregate_single_node() {
-        let entries = [
-            make_entry(1, 10, 100),
-            make_entry(1, 20, 200),
-        ];
+        let entries = [make_entry(1, 10, 100), make_entry(1, 20, 200)];
         let (aggregate, count) = aggregate_signatures(&entries);
         assert_eq!(count, 2);
         assert_ne!(aggregate, [0u8; 96]);
@@ -165,7 +162,10 @@ mod tests {
 
         assert_eq!(count_a, 1);
         assert_eq!(count_b, 1);
-        assert_ne!(agg_a, agg_b, "different signatures must produce different aggregates");
+        assert_ne!(
+            agg_a, agg_b,
+            "different signatures must produce different aggregates"
+        );
 
         // State isolation: each set only reflects its own entries.
         let state_a = build_aggregation_state(&make_node_id(1), &entries_a);

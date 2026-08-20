@@ -143,7 +143,10 @@ pub struct G1Point {
 impl G1Point {
     /// The G1 identity point.
     pub const fn identity() -> Self {
-        G1Point { x: 0, y_sign: false }
+        G1Point {
+            x: 0,
+            y_sign: false,
+        }
     }
 
     /// Create a new G1 point.
@@ -161,19 +164,19 @@ impl G1Point {
     /// - y-sign: stored in the most significant bit of byte[0]
     pub fn to_bytes(&self) -> [u8; 48] {
         let mut bytes = [0u8; 48];
-        
+
         // Write x-coordinate in big-endian format
         // In the model, we use u64; in real BLS12-381 this would be 381 bits
         let x_bytes = self.x.to_be_bytes();
-        
+
         // Place the x coordinate in the last 8 bytes (big-endian, MSB first)
         bytes[40..48].copy_from_slice(&x_bytes);
-        
+
         // Set the y-sign bit in the MSB of the first byte
         if self.y_sign {
             bytes[0] |= 0x80; // Set the most significant bit
         }
-        
+
         bytes
     }
 
@@ -183,15 +186,15 @@ impl G1Point {
     pub fn from_bytes(bytes: &[u8; 48]) -> Self {
         // Extract y-sign bit from the MSB of byte[0]
         let y_sign = (bytes[0] & 0x80) != 0;
-        
+
         // Extract x-coordinate from bytes[40..48] as big-endian
         // The y-sign bit is stored separately in byte[0], not in the x-coordinate bytes
         let mut x_bytes = [0u8; 8];
         x_bytes.copy_from_slice(&bytes[40..48]);
-        
+
         // Read x-coordinate as big-endian
         let x = u64::from_be_bytes(x_bytes);
-        
+
         G1Point { x, y_sign }
     }
 }
@@ -223,10 +226,10 @@ impl SharedPublicKey {
     pub fn from_bytes(bytes: &[u8; 96]) -> Self {
         let mut a0_bytes = [0u8; 48];
         let mut a1_bytes = [0u8; 48];
-        
+
         a0_bytes.copy_from_slice(&bytes[0..48]);
         a1_bytes.copy_from_slice(&bytes[48..96]);
-        
+
         SharedPublicKey {
             a0: G1Point::from_bytes(&a0_bytes),
             a1: G1Point::from_bytes(&a1_bytes),

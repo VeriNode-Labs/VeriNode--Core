@@ -1,8 +1,7 @@
 use soroban_sdk::{Address, Env};
 
 use super::{
-    event_store::SlashingEventStore, NodeState, SlashingDataKey, SlashingEvent,
-    SlashingEventStatus,
+    event_store::SlashingEventStore, NodeState, SlashingDataKey, SlashingEvent, SlashingEventStatus,
 };
 
 /// The slashing executor. Responsible for actually applying the penalty

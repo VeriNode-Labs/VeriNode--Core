@@ -1,10 +1,8 @@
 use soroban_sdk::{Address, Env, Vec};
 
 use super::{
-    event_store::SlashingEventStore,
-    executor::SlashingExecutor,
-    NodeState, SlashingDataKey, SlashingEvent, SlashingEventStatus, SlashingReason,
-    SCAN_INTERVAL_SECONDS, SLASHING_PENALTY,
+    event_store::SlashingEventStore, executor::SlashingExecutor, NodeState, SlashingDataKey,
+    SlashingEvent, SlashingEventStatus, SlashingReason, SCAN_INTERVAL_SECONDS, SLASHING_PENALTY,
 };
 
 /// The slashing condition monitor. Runs every 6 hours (SCAN_INTERVAL_SECONDS),
@@ -156,9 +154,7 @@ impl SlashingMonitor {
             Self::set_slashing_lock(env, &node_id, false);
 
             // Reload the event with updated status for return value
-            if let Some(final_event) =
-                SlashingEventStore::get_event(env, &node_id, scan_epoch)
-            {
+            if let Some(final_event) = SlashingEventStore::get_event(env, &node_id, scan_epoch) {
                 events.push_back(final_event);
             }
         }

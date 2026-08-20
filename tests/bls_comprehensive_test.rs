@@ -188,9 +188,18 @@ fn ingress_edge_cases() {
 
     // Extra bytes (should work, takes first 8)
     let extra_bytes = [
-        valid_bytes[0], valid_bytes[1], valid_bytes[2], valid_bytes[3],
-        valid_bytes[4], valid_bytes[5], valid_bytes[6], valid_bytes[7],
-        99, 99, 99, 99, // Extra bytes ignored
+        valid_bytes[0],
+        valid_bytes[1],
+        valid_bytes[2],
+        valid_bytes[3],
+        valid_bytes[4],
+        valid_bytes[5],
+        valid_bytes[6],
+        valid_bytes[7],
+        99,
+        99,
+        99,
+        99, // Extra bytes ignored
     ];
     assert!(deserialize_public_key(cfg, &extra_bytes).is_ok());
 }
@@ -250,12 +259,22 @@ fn config_toggle_behavior() {
     // Strict config: valid passes, invalid fails
     let strict = SignatureVerifierConfig::REQUIRE_SUBGROUP_CHECK;
     assert!(verify_single_signature(strict, &valid_pk, MSG, &valid_sig));
-    assert!(!verify_single_signature(strict, &invalid_pk, MSG, &invalid_sig));
+    assert!(!verify_single_signature(
+        strict,
+        &invalid_pk,
+        MSG,
+        &invalid_sig
+    ));
 
     // Test network config: both pass (demonstrates vulnerability)
     let test = SignatureVerifierConfig::TEST_NETWORK;
     assert!(verify_single_signature(test, &valid_pk, MSG, &valid_sig));
-    assert!(verify_single_signature(test, &invalid_pk, MSG, &invalid_sig)); // ⚠️ Vulnerable!
+    assert!(verify_single_signature(
+        test,
+        &invalid_pk,
+        MSG,
+        &invalid_sig
+    )); // ⚠️ Vulnerable!
 
     // Default is strict
     let default = SignatureVerifierConfig::default();

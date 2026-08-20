@@ -195,7 +195,10 @@ impl SecretRotationService {
         new_secret: Vec<u8>,
         now: u64,
     ) -> Result<CredentialVersion, RotationError> {
-        let entry = self.credentials.get_mut(binding).ok_or(RotationError::BindingNotFound)?;
+        let entry = self
+            .credentials
+            .get_mut(binding)
+            .ok_or(RotationError::BindingNotFound)?;
 
         // Find the active credential
         let active = entry
@@ -348,7 +351,9 @@ mod tests {
     fn register_new_credential_returns_version() {
         let mut svc = SecretRotationService::default();
         let s = secret(&[0xAB; 32]);
-        let version = svc.register(binding("postgres-main"), s.clone(), 1000).unwrap();
+        let version = svc
+            .register(binding("postgres-main"), s.clone(), 1000)
+            .unwrap();
         assert_eq!(version, 1);
 
         let active = svc.get_active(&binding("postgres-main")).unwrap();
@@ -360,7 +365,10 @@ mod tests {
     fn register_rejects_too_short_secret() {
         let mut svc = SecretRotationService::default();
         let result = svc.register(binding("db"), secret(&[0x01; 8]), 1000);
-        assert!(matches!(result, Err(RotationError::SecretTooShort { length: 8, min: 16 })));
+        assert!(matches!(
+            result,
+            Err(RotationError::SecretTooShort { length: 8, min: 16 })
+        ));
     }
 
     #[test]
@@ -378,12 +386,16 @@ mod tests {
 
         // Register 3 active credentials
         for i in 0..MAX_ACTIVE_VERSIONS {
-            svc.register(b.clone(), secret(&[i as u8; 32]), 1000 + i as u64).unwrap();
+            svc.register(b.clone(), secret(&[i as u8; 32]), 1000 + i as u64)
+                .unwrap();
         }
 
         // 4th should fail
         let result = svc.register(b.clone(), secret(&[0xEE; 32]), 2000);
-        assert!(matches!(result, Err(RotationError::TooManyActiveVersions { count: 3, max: 3 })));
+        assert!(matches!(
+            result,
+            Err(RotationError::TooManyActiveVersions { count: 3, max: 3 })
+        ));
     }
 
     #[test]
@@ -480,8 +492,10 @@ mod tests {
     #[test]
     fn metrics_tracks_bindings_and_active_credentials() {
         let mut svc = SecretRotationService::default();
-        svc.register(binding("svc-a"), secret(&[0x01; 32]), 1000).unwrap();
-        svc.register(binding("svc-b"), secret(&[0xAA; 32]), 1000).unwrap();
+        svc.register(binding("svc-a"), secret(&[0x01; 32]), 1000)
+            .unwrap();
+        svc.register(binding("svc-b"), secret(&[0xAA; 32]), 1000)
+            .unwrap();
 
         let m = svc.metrics();
         assert_eq!(m.bindings_tracked, 2);
@@ -514,8 +528,10 @@ mod tests {
     #[test]
     fn multiple_bindings_are_independent() {
         let mut svc = SecretRotationService::default();
-        svc.register(binding("db"), secret(&[0x01; 32]), 1000).unwrap();
-        svc.register(binding("api"), secret(&[0x02; 32]), 1000).unwrap();
+        svc.register(binding("db"), secret(&[0x01; 32]), 1000)
+            .unwrap();
+        svc.register(binding("api"), secret(&[0x02; 32]), 1000)
+            .unwrap();
 
         let db = svc.get_active(&binding("db")).unwrap();
         let api = svc.get_active(&binding("api")).unwrap();

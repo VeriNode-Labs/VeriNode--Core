@@ -1,4 +1,3 @@
-
 pub const WINDOW_SIZE: usize = 4096;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -1,6 +1,6 @@
-pub mod monitor;
-pub mod executor;
 pub mod event_store;
+pub mod executor;
+pub mod monitor;
 pub mod pool;
 
 #[cfg(test)]

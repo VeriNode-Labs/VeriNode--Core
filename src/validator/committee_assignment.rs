@@ -6,10 +6,10 @@
 //! that support attestation verification across the reorg boundary.
 
 extern crate alloc;
-use alloc::vec::Vec;
-use crate::crypto::sha256::sha256;
 use crate::crypto::merkle::Hash256;
+use crate::crypto::sha256::sha256;
 use crate::validator::exit_queue::ValidatorIndex;
+use alloc::vec::Vec;
 
 /// Constants from Ethereum beacon chain specification
 pub const SLOTS_PER_EPOCH: u64 = 32;
@@ -46,7 +46,10 @@ pub enum CommitteeView {
     /// Normal operation: single committee root
     Stable(Hash256),
     /// During reorg window: both old and new roots are valid
-    Ambiguous { old_root: Hash256, new_root: Hash256 },
+    Ambiguous {
+        old_root: Hash256,
+        new_root: Hash256,
+    },
 }
 
 impl CommitteeView {
@@ -124,9 +127,8 @@ impl CommitteeAssignment {
         if let Some(_reorg) = self.pending_reorg {
             if self.old_validator_indices.is_some() {
                 // During reorg window or until finalized: return ambiguous view
-                let old_root = self.compute_committee_root(
-                    self.old_validator_indices.as_ref().unwrap()
-                );
+                let old_root =
+                    self.compute_committee_root(self.old_validator_indices.as_ref().unwrap());
                 let new_root = self.compute_committee_root(&self.validator_indices);
                 return CommitteeView::ambiguous(old_root, new_root);
             }
@@ -231,7 +233,7 @@ mod tests {
 
         // Trigger reorg at slot 100
         assignment.trigger_reorg(100);
-        
+
         // Update to new validator set
         let new_indices = vec![10, 20, 30, 50]; // validator 40 exited, 50 joined
         assignment.update_validator_set(new_indices);

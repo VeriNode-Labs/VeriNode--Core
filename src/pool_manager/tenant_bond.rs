@@ -86,11 +86,7 @@ impl TenantBondManager {
     ///
     /// - [`BondError::BondAlreadyExists`] if the tenant already has a locked bond.
     /// - [`BondError::InvalidBondAmount`] if amount is outside [MIN_BOND_AMOUNT, MAX_BOND_AMOUNT].
-    pub fn lock_tenant_bond(
-        env: &Env,
-        tenant: &Address,
-        amount: i128,
-    ) -> Result<(), BondError> {
+    pub fn lock_tenant_bond(env: &Env, tenant: &Address, amount: i128) -> Result<(), BondError> {
         // REENTRANCY GUARD — must be first statement before any logic
         let _guard = ReentrancyGuard::new(env);
 
@@ -554,11 +550,10 @@ mod tests {
         let tenant = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            TenantBondManager::lock_tenant_bond(&env, &tenant, 1000)
-                .expect("lock should succeed");
+            TenantBondManager::lock_tenant_bond(&env, &tenant, 1000).expect("lock should succeed");
 
-            let claimed = TenantBondManager::claim_slashed_bond(&env, &tenant)
-                .expect("claim should succeed");
+            let claimed =
+                TenantBondManager::claim_slashed_bond(&env, &tenant).expect("claim should succeed");
             assert_eq!(claimed, 1000);
 
             let entry = TenantBondManager::get_bond(&env, &tenant).expect("entry should exist");
@@ -587,8 +582,7 @@ mod tests {
         let tenant = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            TenantBondManager::lock_tenant_bond(&env, &tenant, 500)
-                .expect("lock should succeed");
+            TenantBondManager::lock_tenant_bond(&env, &tenant, 500).expect("lock should succeed");
         });
 
         env.ledger().with_mut(|l| {
@@ -596,8 +590,7 @@ mod tests {
         });
 
         env.as_contract(&contract_id, || {
-            TenantBondManager::unlock_tenant_bond(&env, &tenant)
-                .expect("unlock should succeed");
+            TenantBondManager::unlock_tenant_bond(&env, &tenant).expect("unlock should succeed");
 
             let result = TenantBondManager::claim_slashed_bond(&env, &tenant);
             assert_eq!(result, Err(BondError::BondNotLocked));

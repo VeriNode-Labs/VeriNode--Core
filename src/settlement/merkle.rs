@@ -133,8 +133,7 @@ mod tests {
     #[test]
     fn verifies_a_valid_proof_at_every_position() {
         let env = Env::default();
-        let leaves: alloc::vec::Vec<BytesN<32>> =
-            (0u8..8).map(|i| leaf_hash(&env, i)).collect();
+        let leaves: alloc::vec::Vec<BytesN<32>> = (0u8..8).map(|i| leaf_hash(&env, i)).collect();
 
         for target in 0..leaves.len() {
             let (root, proof) = build_tree(&env, &leaves, target);
@@ -151,8 +150,7 @@ mod tests {
     #[test]
     fn rejects_a_tampered_leaf() {
         let env = Env::default();
-        let leaves: alloc::vec::Vec<BytesN<32>> =
-            (0u8..8).map(|i| leaf_hash(&env, i)).collect();
+        let leaves: alloc::vec::Vec<BytesN<32>> = (0u8..8).map(|i| leaf_hash(&env, i)).collect();
         let (root, proof) = build_tree(&env, &leaves, 0);
 
         let wrong_leaf = leaf_hash(&env, 99);
@@ -162,8 +160,7 @@ mod tests {
     #[test]
     fn rejects_a_tampered_sibling() {
         let env = Env::default();
-        let leaves: alloc::vec::Vec<BytesN<32>> =
-            (0u8..8).map(|i| leaf_hash(&env, i)).collect();
+        let leaves: alloc::vec::Vec<BytesN<32>> = (0u8..8).map(|i| leaf_hash(&env, i)).collect();
         let (root, mut proof) = build_tree(&env, &leaves, 0);
 
         let tampered = leaf_hash(&env, 200);
@@ -174,8 +171,7 @@ mod tests {
     #[test]
     fn rejects_wrong_index_for_a_valid_proof() {
         let env = Env::default();
-        let leaves: alloc::vec::Vec<BytesN<32>> =
-            (0u8..8).map(|i| leaf_hash(&env, i)).collect();
+        let leaves: alloc::vec::Vec<BytesN<32>> = (0u8..8).map(|i| leaf_hash(&env, i)).collect();
         let (root, proof) = build_tree(&env, &leaves, 0);
 
         // Proof for index 0 must not also verify at index 1 (different

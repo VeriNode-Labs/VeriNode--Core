@@ -9,7 +9,7 @@
 use sorosusu_contracts::crypto::bls_keys::{
     deserialize_shared_public_key, serialize_shared_public_key, G1Point, SharedPublicKey,
 };
-use sorosusu_contracts::crypto::dkg::{DkgRound1Message, DistributedKeyGeneration};
+use sorosusu_contracts::crypto::dkg::{DistributedKeyGeneration, DkgRound1Message};
 use sorosusu_contracts::network::dkg_message::{
     deserialize_dkg_round1_message, serialize_dkg_round1_message,
 };
@@ -106,7 +106,10 @@ fn test_shared_public_key_roundtrip() {
     let serialized = serialize_shared_public_key(&original);
     let deserialized = deserialize_shared_public_key(&serialized);
 
-    assert_eq!(original, deserialized, "Shared public key round-trip failed");
+    assert_eq!(
+        original, deserialized,
+        "Shared public key round-trip failed"
+    );
     assert_eq!(original.a0, deserialized.a0, "Coefficient a0 mismatch");
     assert_eq!(original.a1, deserialized.a1, "Commitment a1 mismatch");
 }
@@ -119,7 +122,11 @@ fn test_shared_public_key_is_96_bytes() {
 
     let bytes = serialize_shared_public_key(&key);
 
-    assert_eq!(bytes.len(), 96, "Shared public key must be exactly 96 bytes");
+    assert_eq!(
+        bytes.len(),
+        96,
+        "Shared public key must be exactly 96 bytes"
+    );
 }
 
 #[test]
@@ -204,7 +211,10 @@ fn test_identity_point_roundtrip() {
     let deserialized = G1Point::from_bytes(&serialized);
 
     assert_eq!(identity, deserialized, "Identity point round-trip failed");
-    assert!(deserialized.is_identity(), "Deserialized point should be identity");
+    assert!(
+        deserialized.is_identity(),
+        "Deserialized point should be identity"
+    );
 }
 
 #[test]
@@ -243,14 +253,10 @@ fn test_regression_known_serialization_format() {
         0x80,
         "MSB of byte[0] should be set for y_sign=true"
     );
-    
+
     // Bytes 1-39 should be zero (padding for 381-bit field)
     for i in 1..40 {
-        assert_eq!(
-            bytes[i], 0,
-            "Byte {} should be 0 (padding)",
-            i
-        );
+        assert_eq!(bytes[i], 0, "Byte {} should be 0 (padding)", i);
     }
 
     // Last 8 bytes should contain the x-coordinate in big-endian
@@ -267,25 +273,21 @@ fn test_regression_known_serialization_format() {
     let deserialized = G1Point::from_bytes(&bytes);
     assert_eq!(deserialized.x, 1);
     assert_eq!(deserialized.y_sign, true);
-    
+
     // Also test with y_sign=false
     let point2 = G1Point::new(0x0000000000000001, false);
     let bytes2 = point2.to_bytes();
-    
+
     // Byte 0 should NOT have the y-sign bit set
     assert_eq!(
         bytes2[0] & 0x80,
         0x00,
         "MSB of byte[0] should NOT be set for y_sign=false"
     );
-    
+
     // All bytes 0-39 should be zero for y_sign=false
     for i in 0..40 {
-        assert_eq!(
-            bytes2[i], 0,
-            "Byte {} should be 0",
-            i
-        );
+        assert_eq!(bytes2[i], 0, "Byte {} should be 0", i);
     }
 }
 

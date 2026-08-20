@@ -68,15 +68,24 @@ fn fixed_reward_debits_pool_by_exact_share() {
         let reporters = make_reporters(&env, 5);
         SlashingRewardPool::create_pool(&env, event_id, initial_pool, &reporters);
 
-        assert_eq!(SlashingRewardPool::reward_per_validator(&env, event_id), 200);
+        assert_eq!(
+            SlashingRewardPool::reward_per_validator(&env, event_id),
+            200
+        );
 
         let mut remaining = initial_pool;
         for (i, reporter) in reporters.iter().enumerate() {
             let payout = SlashingRewardPool::claim_reward(&env, event_id, &reporter).unwrap();
             assert_eq!(payout, 200);
             remaining -= payout;
-            assert_eq!(SlashingRewardPool::pool_remaining(&env, event_id), remaining);
-            assert!(SlashingRewardPool::pool_remaining(&env, event_id) >= 0, "claim {i}");
+            assert_eq!(
+                SlashingRewardPool::pool_remaining(&env, event_id),
+                remaining
+            );
+            assert!(
+                SlashingRewardPool::pool_remaining(&env, event_id) >= 0,
+                "claim {i}"
+            );
         }
         assert_eq!(remaining, 0);
     });
@@ -142,7 +151,11 @@ fn create_pool_is_idempotent() {
     env.as_contract(&contract_id, || {
         let event_id = 5u64;
         let reporters = make_reporters(&env, 2);
-        assert!(SlashingRewardPool::create_pool(&env, event_id, 1000, &reporters));
-        assert!(!SlashingRewardPool::create_pool(&env, event_id, 1000, &reporters));
+        assert!(SlashingRewardPool::create_pool(
+            &env, event_id, 1000, &reporters
+        ));
+        assert!(!SlashingRewardPool::create_pool(
+            &env, event_id, 1000, &reporters
+        ));
     });
 }
