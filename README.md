@@ -1,47 +1,31 @@
-# VeriNode--Core
+# VeriNode Core
 
-Core smart contracts for the VeriNode Decentralized Savings Circle protocol, providing a trustless Rotating Savings and Credit Association (ROSCA) infrastructure on Stellar Soroban.
+Core smart contracts and protocol primitives for the VeriNode decentralized
+savings-circle protocol on Stellar Soroban.
 
-## 🚀 Key Features
-* **Decentralized ROSCA Protocol:** Create and join savings circles with custom contribution rules, cycle rollovers, and automated payouts.
-* **Collateralized Entry & Slashing:** Built-in collateral requirements for high-value groups with slashing mechanisms for defaulting members.
-* **Leniency Voting & Buddy System:** Governance extensions for grace periods via democratic voting and buddy pairing safety fallback payments.
+The consolidated developer, API, operations, testing, and troubleshooting guide
+lives in [CORE.md](CORE.md). Keep `README.md` as the short project entry point
+and update `CORE.md` for durable documentation changes.
 
-## 🛠️ Tech Stack
-* **Language/Framework:** Rust / Soroban WASM
-* **Key Dependencies:** `soroban-sdk`
+## Quickstart
 
-## 📦 Getting Started
-
-### Prerequisites
-Ensure you have the required toolchains installed:
-* Rust toolchain (cargo, rustc)
-* Stellar CLI / Soroban CLI
-
-### Installation & Local Setup
 ```bash
-# Clone the repository (if running manually)
-git clone https://github.com/VeriNode-Labs/VeriNode--Core
-
-# Build the smart contracts
+rustup target add wasm32-unknown-unknown
 cargo build --target wasm32-unknown-unknown --release
-
-# Run the test suite
 cargo test
 ```
 
+## Main Features
 
-## ✅ Continuous Integration
+- `SoroSusu` savings-circle contract with deposits, round finalization, payout
+  claims, insurance coverage, buddy safety deposits, collateral, leniency
+  voting, and quadratic governance.
+- Validator, attestation, crypto, slashing, settlement, reputation, mempool,
+  backup, webhook, and operational support modules.
+- CI support for Rust tests, coverage, dependency scanning, and storage-layout
+  validation.
 
-The Rust CI workflow builds the workspace, runs the full test suite, and enforces a minimum line coverage threshold before a pull request can merge. Coverage is generated with `cargo-llvm-cov` and the workflow fails when line coverage is below the `COVERAGE_THRESHOLD` value configured in `.github/workflows/rust.yml` (currently 80%).
+## Contributing
 
-To check the same threshold locally, install `cargo-llvm-cov` and run:
-
-```bash
-rustup component add llvm-tools-preview
-cargo install cargo-llvm-cov
-cargo llvm-cov --workspace --all-targets --locked --fail-under-lines 80 --summary-only
-```
-
-## 🤝 Contributing
-Contributions are highly welcome. Please ensure your commits are cryptographically signed using GPG or SSH keys. For major structural changes, please open an issue first to discuss your proposal.
+Open an issue before major structural changes. Use the checks documented in
+[CORE.md](CORE.md#testing-and-ci) before submitting a pull request.
