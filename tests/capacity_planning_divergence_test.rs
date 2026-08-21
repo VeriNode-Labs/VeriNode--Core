@@ -8,13 +8,13 @@
 //!   while the linear model is unaffected; both stay within the 10% tolerance.
 //! * Divergence correction and the sustained-divergence warning path.
 
-use sorosusu_contracts::pool::capacity::{
-    GC_PENALTY_WINDOW_S, MAX_NUMA_PENALTY, NonLinearInputs, NUMA_PENALTY_PER_NODE,
-};
 use sorosusu_contracts::pool::{
     CapacityEvent, GlobalCoordinator, LocalEstimator, LocalEstimatorSnapshot, ResourceMeasurements,
     DIVERGENCE_CONSECUTIVE_CYCLES, DIVERGENCE_TOLERANCE, GLOBAL_COORDINATOR_SYNC_INTERVAL_S,
     LOCAL_ESTIMATOR_INTERVAL_S, MAX_OVERCOMMIT_RATIO,
+};
+use sorosusu_contracts::pool::capacity::{
+    GC_PENALTY_WINDOW_S, MAX_NUMA_PENALTY, NonLinearInputs, NUMA_PENALTY_PER_NODE,
 };
 
 // ---------------------------------------------------------------------------
@@ -89,8 +89,7 @@ fn gc_pressure_100ms_pause_every_5s_stays_within_divergence_tolerance() {
         let divergence = (snapshot.estimate_local - snapshot.estimate_linear).abs();
         assert!(
             divergence <= DIVERGENCE_TOLERANCE,
-            "cycle {sync_cycle}: divergence {divergence:.4} exceeds tolerance \
-             {DIVERGENCE_TOLERANCE}"
+            "cycle {sync_cycle}: divergence {divergence:.4} exceeds tolerance {DIVERGENCE_TOLERANCE}"
         );
     }
 

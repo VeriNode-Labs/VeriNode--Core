@@ -124,8 +124,8 @@ mod tests {
                 memory_utilization: 0.3,
                 bandwidth_utilization: 0.3,
             },
-            gc_pause_ms: 100,  // 0.1 s pause penalty
-            secs_since_gc: 0,  // inside penalty window
+            gc_pause_ms: 100, // 0.1 s pause penalty
+            secs_since_gc: 0, // inside penalty window
             numa_node_count: 1,
         };
         let snap = est.update(inp, 5);
