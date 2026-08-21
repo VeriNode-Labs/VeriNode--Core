@@ -61,6 +61,10 @@ path = "tests/light_client_finality_skew_test.rs"
 name = "capacity_planning_divergence_test"
 path = "tests/capacity_planning_divergence_test.rs"
 
+[[test]]
+name = "shard_memory_fragmentation_test"
+path = "tests/shard_memory_fragmentation_test.rs"
+
 # ── Lint policy ──────────────────────────────────────────────────────────────
 # Enforced via `cargo clippy -- -D warnings` in CI. The lints below are the
 # style/pedantic ones we deliberately do not churn on:
