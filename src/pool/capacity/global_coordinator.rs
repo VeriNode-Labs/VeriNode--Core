@@ -26,6 +26,11 @@
 //! [`CapacityEvent::ModelDivergenceWarning`] and switches to using the more
 //! conservative (lower) of the two estimates for that node.
 
+extern crate alloc;
+
+use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
+
 use crate::pool::capacity::local_estimator::LocalEstimatorSnapshot;
 
 /// Global coordinator sync interval (5 seconds, per issue invariant).
@@ -79,10 +84,8 @@ struct NodeState {
 #[derive(Clone, Debug, Default)]
 pub struct GlobalCoordinator {
     /// Per-node tracking state, indexed by node ID.
-    nodes: alloc::collections::BTreeMap<u64, NodeState>,
+    nodes: BTreeMap<u64, NodeState>,
 }
-
-extern crate alloc;
 
 impl GlobalCoordinator {
     /// Creates a new coordinator with no registered nodes.
@@ -108,9 +111,9 @@ impl GlobalCoordinator {
         &mut self,
         node_id: u64,
         snapshot: &LocalEstimatorSnapshot,
-    ) -> (f64, alloc::vec::Vec<CapacityEvent>) {
+    ) -> (f64, Vec<CapacityEvent>) {
         let state = self.nodes.entry(node_id).or_default();
-        let mut events = alloc::vec::Vec::new();
+        let mut events = Vec::new();
 
         // --- Divergence ---
         let abs_divergence = (snapshot.estimate_local - snapshot.estimate_linear).abs();

@@ -8,13 +8,13 @@
 //!   while the linear model is unaffected; both stay within the 10% tolerance.
 //! * Divergence correction and the sustained-divergence warning path.
 
+use sorosusu_contracts::pool::capacity::{
+    GC_PENALTY_WINDOW_S, MAX_NUMA_PENALTY, NonLinearInputs, NUMA_PENALTY_PER_NODE,
+};
 use sorosusu_contracts::pool::{
-    CapacityEvent, GlobalCoordinator, LocalEstimator, ResourceMeasurements,
+    CapacityEvent, GlobalCoordinator, LocalEstimator, LocalEstimatorSnapshot, ResourceMeasurements,
     DIVERGENCE_CONSECUTIVE_CYCLES, DIVERGENCE_TOLERANCE, GLOBAL_COORDINATOR_SYNC_INTERVAL_S,
     LOCAL_ESTIMATOR_INTERVAL_S, MAX_OVERCOMMIT_RATIO,
-};
-use sorosusu_contracts::pool::capacity::{
-    NonLinearInputs, GC_PENALTY_WINDOW_S, MAX_NUMA_PENALTY, NUMA_PENALTY_PER_NODE,
 };
 
 // ---------------------------------------------------------------------------
@@ -26,7 +26,7 @@ fn technical_invariants_match_issue_139() {
     assert_eq!(LOCAL_ESTIMATOR_INTERVAL_S, 1);
     assert_eq!(GLOBAL_COORDINATOR_SYNC_INTERVAL_S, 5);
     assert!((DIVERGENCE_TOLERANCE - 0.10).abs() < 1e-9); // ±10%
-    assert!((MAX_OVERCOMMIT_RATIO - 1.2).abs() < 1e-9);  // max 1.2×
+    assert!((MAX_OVERCOMMIT_RATIO - 1.2).abs() < 1e-9); // max 1.2×
     assert_eq!(DIVERGENCE_CONSECUTIVE_CYCLES, 3);
     // GC penalty window
     assert_eq!(GC_PENALTY_WINDOW_S, 10);
@@ -89,7 +89,8 @@ fn gc_pressure_100ms_pause_every_5s_stays_within_divergence_tolerance() {
         let divergence = (snapshot.estimate_local - snapshot.estimate_linear).abs();
         assert!(
             divergence <= DIVERGENCE_TOLERANCE,
-            "cycle {sync_cycle}: divergence {divergence:.4} exceeds tolerance {DIVERGENCE_TOLERANCE}"
+            "cycle {sync_cycle}: divergence {divergence:.4} exceeds tolerance \
+             {DIVERGENCE_TOLERANCE}"
         );
     }
 
@@ -111,7 +112,7 @@ fn coordinator_applies_correction_factor_on_divergence() {
 
     // Craft a snapshot where the non-linear model gives 0.7 and the linear 0.5.
     // |diff| = 0.2; correction = 0.7 * (1 - 0.2) = 0.56.
-    let snap = sorosusu_contracts::pool::LocalEstimatorSnapshot {
+    let snap = LocalEstimatorSnapshot {
         measurements: ResourceMeasurements::default(),
         estimate_local: 0.7,
         estimate_linear: 0.5,
@@ -191,7 +192,7 @@ fn convergence_after_warning_emits_converged_event() {
     let mut coord = GlobalCoordinator::new();
     const NODE_ID: u64 = 7;
 
-    let diverged = sorosusu_contracts::pool::LocalEstimatorSnapshot {
+    let diverged = LocalEstimatorSnapshot {
         measurements: ResourceMeasurements::default(),
         estimate_local: 0.9,
         estimate_linear: 0.5, // |diff| = 0.4 → well above tolerance
@@ -205,7 +206,7 @@ fn convergence_after_warning_emits_converged_event() {
     assert!(coord.is_conservative(NODE_ID));
 
     // Present a converged snapshot.
-    let converged = sorosusu_contracts::pool::LocalEstimatorSnapshot {
+    let converged = LocalEstimatorSnapshot {
         measurements: ResourceMeasurements::default(),
         estimate_local: 0.75,
         estimate_linear: 0.74, // |diff| = 0.01 < 0.10
