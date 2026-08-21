@@ -31,6 +31,6 @@ pub use local_estimator::{
 };
 pub use model_linear::{estimate_linear, LinearCapacityEstimate, ResourceMeasurements};
 pub use model_nonlinear::{
-    estimate_nonlinear, GC_PENALTY_WINDOW_S, MAX_NUMA_PENALTY, NonLinearCapacityEstimate,
-    NonLinearInputs, NUMA_PENALTY_PER_NODE,
+    estimate_nonlinear, NonLinearCapacityEstimate, NonLinearInputs, GC_PENALTY_WINDOW_S,
+    MAX_NUMA_PENALTY, NUMA_PENALTY_PER_NODE,
 };
