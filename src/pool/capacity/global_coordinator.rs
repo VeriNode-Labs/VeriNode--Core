@@ -181,7 +181,7 @@ impl GlobalCoordinator {
     pub fn is_conservative(&self, node_id: u64) -> bool {
         self.nodes
             .get(&node_id)
-            .map_or(false, |s| s.using_conservative)
+            .is_some_and(|s| s.using_conservative)
     }
 }
 
