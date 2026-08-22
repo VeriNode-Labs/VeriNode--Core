@@ -7,7 +7,8 @@ license = "MIT"
 
 [lib]
 name = "sorosusu_contracts"
-crate-type = ["cdylib", "rlib"] # Essential for WASM compilation and integration tests
+crate-type = ["rlib"]
+
 
 [features]
 testutils = []
@@ -26,8 +27,13 @@ lto = true
 codegen-units = 1
 
 [[test]]
+name = "accumulator_tests"
+path = "tests/slashing/accumulator_tests.rs"
+
+[[test]]
 name = "griefing_resistance_test"
 path = "tests/slashing/griefing_resistance_test.rs"
+
 
 [[test]]
 name = "bls_comprehensive_test"
