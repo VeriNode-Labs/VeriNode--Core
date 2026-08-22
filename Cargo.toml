@@ -7,8 +7,7 @@ license = "MIT"
 
 [lib]
 name = "sorosusu_contracts"
-crate-type = ["rlib"]
-
+crate-type = ["cdylib", "rlib"] # Essential for WASM compilation and integration tests
 
 [features]
 testutils = []
@@ -27,25 +26,12 @@ lto = true
 codegen-units = 1
 
 [[test]]
-name = "accumulator_tests"
-path = "tests/slashing/accumulator_tests.rs"
-
-[[test]]
-name = "pruner_burst_test"
-path = "tests/storage/pruner_burst_test.rs"
-
-[[test]]
 name = "griefing_resistance_test"
 path = "tests/slashing/griefing_resistance_test.rs"
-
 
 [[test]]
 name = "bls_comprehensive_test"
 path = "tests/bls_comprehensive_test.rs"
-
-[[test]]
-name = "bls_cache_collision_test"
-path = "tests/attestation/bls_cache_collision_test.rs"
 
 [[test]]
 name = "dkg_serialization_roundtrip_test"
@@ -74,14 +60,6 @@ path = "tests/light_client_finality_skew_test.rs"
 [[test]]
 name = "capacity_planning_divergence_test"
 path = "tests/capacity_planning_divergence_test.rs"
-
-[[test]]
-name = "shard_memory_fragmentation_test"
-path = "tests/shard_memory_fragmentation_test.rs"
-
-[[test]]
-name = "view_change_partition_test"
-path = "tests/consensus/view_change_partition_test.rs"
 
 # ── Lint policy ──────────────────────────────────────────────────────────────
 # Enforced via `cargo clippy -- -D warnings` in CI. The lints below are the

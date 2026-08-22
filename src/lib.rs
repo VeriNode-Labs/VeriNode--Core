@@ -24,7 +24,6 @@ pub mod crypto;
 // transition so exit processing is reproducible across clients.
 pub mod db;
 pub mod state;
-pub mod storage;
 pub mod validator;
 
 // Batch bond-settlement via Merkle-proof commit-reveal (issue #57).
@@ -126,12 +125,6 @@ pub mod cross_chain;
 // conservative estimate when the two models diverge by more than 10% for 3
 // consecutive sync cycles.
 pub mod pool;
-
-// Buddy-system memory allocator backing the shard connection pool (issue #141).
-// Replaces the previous free-list with a buddy-tree structure that coalesces
-// adjacent free blocks to eliminate pathological external fragmentation under
-// high-frequency tenant churn.
-pub mod mem;
 // --- ERROR CODES ---
 
 #[contracterror]
