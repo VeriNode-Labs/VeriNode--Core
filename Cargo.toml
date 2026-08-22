@@ -70,6 +70,10 @@ name = "byzantine_equivocation_recovery_test"
 path = "tests/consensus/byzantine_equivocation_recovery_test.rs"
 
 [[test]]
+name = "slashing_fraud_proof_test"
+path = "tests/consensus/slashing_fraud_proof_test.rs"
+
+[[test]]
 name = "pg_pool_health_probe_test"
 path = "tests/pg_pool_health_probe_test.rs"
 
