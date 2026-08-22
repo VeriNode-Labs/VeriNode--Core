@@ -24,6 +24,7 @@ pub mod crypto;
 // transition so exit processing is reproducible across clients.
 pub mod db;
 pub mod state;
+pub mod storage;
 pub mod validator;
 
 // Batch bond-settlement via Merkle-proof commit-reveal (issue #57).
