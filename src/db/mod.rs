@@ -6,3 +6,4 @@ pub mod migrations;
 #[path = "slashing-store.rs"]
 pub mod slashing_store;
 
+pub mod cache;
