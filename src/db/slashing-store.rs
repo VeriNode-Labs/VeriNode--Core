@@ -5,13 +5,13 @@
 
 extern crate alloc;
 
-use alloc::collections::BTreeMap;
-use alloc::vec::Vec;
 use crate::slashing::accumulator::SlashingAccumulator;
 use crate::slashing::types::{
     EpochIndex, GenerationalTag, SlashingRecord, ValidatorIndex, WindowOffset,
     DEFAULT_SLASHING_WINDOW,
 };
+use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
 
 /// Binary serialization format identifier.
 pub const SLASHING_STORE_MAGIC: [u8; 8] = *b"VNSLASH1";
@@ -41,7 +41,6 @@ pub struct SlashingStoreSnapshot {
 /// Store for persisting and querying generational slashing accumulator data.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SlashingStore {
-
     records: BTreeMap<(ValidatorIndex, EpochIndex), SlashingRecord>,
     generational_tags: BTreeMap<ValidatorIndex, GenerationalTag>,
     bit_states: BTreeMap<ValidatorIndex, bool>,
@@ -58,7 +57,11 @@ impl SlashingStore {
 
     /// Create a new empty SlashingStore with specified window size.
     pub fn with_window_size(window_size: u16) -> Self {
-        let size = if window_size == 0 { DEFAULT_SLASHING_WINDOW as u16 } else { window_size };
+        let size = if window_size == 0 {
+            DEFAULT_SLASHING_WINDOW as u16
+        } else {
+            window_size
+        };
         Self {
             records: BTreeMap::new(),
             generational_tags: BTreeMap::new(),
@@ -122,7 +125,11 @@ impl SlashingStore {
     }
 
     /// Retrieve a slashing record by validator index and epoch.
-    pub fn get_record(&self, validator_index: ValidatorIndex, epoch: EpochIndex) -> Option<&SlashingRecord> {
+    pub fn get_record(
+        &self,
+        validator_index: ValidatorIndex,
+        epoch: EpochIndex,
+    ) -> Option<&SlashingRecord> {
         self.records.get(&(validator_index, epoch))
     }
 
@@ -133,7 +140,10 @@ impl SlashingStore {
 
     /// Check if a validator has bit state marked.
     pub fn is_slashed_bit(&self, validator_index: ValidatorIndex) -> bool {
-        self.bit_states.get(&validator_index).copied().unwrap_or(false)
+        self.bit_states
+            .get(&validator_index)
+            .copied()
+            .unwrap_or(false)
     }
 
     /// Current epoch recorded in store.
@@ -225,12 +235,12 @@ impl SlashingStore {
         }
 
         let current_epoch = u64::from_be_bytes([
-            bytes[12], bytes[13], bytes[14], bytes[15],
-            bytes[16], bytes[17], bytes[18], bytes[19],
+            bytes[12], bytes[13], bytes[14], bytes[15], bytes[16], bytes[17], bytes[18], bytes[19],
         ]);
         let window_generation = u16::from_be_bytes([bytes[20], bytes[21]]);
         let window_size = u16::from_be_bytes([bytes[22], bytes[23]]);
-        let record_count = u32::from_be_bytes([bytes[24], bytes[25], bytes[26], bytes[27]]) as usize;
+        let record_count =
+            u32::from_be_bytes([bytes[24], bytes[25], bytes[26], bytes[27]]) as usize;
 
         let record_stride = 20; // 8 + 8 + 2 + 2
         let expected_len = 28 + record_count * record_stride;
@@ -245,12 +255,24 @@ impl SlashingStore {
         let mut offset = 28;
         for _ in 0..record_count {
             let val_idx = u64::from_be_bytes([
-                bytes[offset], bytes[offset + 1], bytes[offset + 2], bytes[offset + 3],
-                bytes[offset + 4], bytes[offset + 5], bytes[offset + 6], bytes[offset + 7],
+                bytes[offset],
+                bytes[offset + 1],
+                bytes[offset + 2],
+                bytes[offset + 3],
+                bytes[offset + 4],
+                bytes[offset + 5],
+                bytes[offset + 6],
+                bytes[offset + 7],
             ]);
             let epoch = u64::from_be_bytes([
-                bytes[offset + 8], bytes[offset + 9], bytes[offset + 10], bytes[offset + 11],
-                bytes[offset + 12], bytes[offset + 13], bytes[offset + 14], bytes[offset + 15],
+                bytes[offset + 8],
+                bytes[offset + 9],
+                bytes[offset + 10],
+                bytes[offset + 11],
+                bytes[offset + 12],
+                bytes[offset + 13],
+                bytes[offset + 14],
+                bytes[offset + 15],
             ]);
             let gen = u16::from_be_bytes([bytes[offset + 16], bytes[offset + 17]]);
             let win_offset = u16::from_be_bytes([bytes[offset + 18], bytes[offset + 19]]);

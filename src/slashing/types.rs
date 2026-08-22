@@ -239,4 +239,3 @@ pub struct RelayedSlashingEvidence {
     pub length: u32,
     pub evidence: Vec<u8>,
 }
-

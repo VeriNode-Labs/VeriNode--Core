@@ -128,9 +128,10 @@ impl TimeoutLeader {
     ///
     /// `timeout(v) = min(BASE_TIMEOUT_MS * 2^v, MAX_TIMEOUT_MS)`
     pub fn timeout_for_view(view: u64) -> u64 {
-        // Use saturating_mul + saturating_shl to avoid overflow on large views.
+        // Use saturating_mul + checked_shl to avoid overflow on large views.
         let shift = view.min(63); // 2^63 already overflows u64, cap the shift
-        let raw = BASE_TIMEOUT_MS.saturating_mul(1u64.saturating_shl(shift as u32));
+        let pow2 = 1u64.checked_shl(shift as u32).unwrap_or(u64::MAX);
+        let raw = BASE_TIMEOUT_MS.saturating_mul(pow2);
         raw.min(MAX_TIMEOUT_MS)
     }
 

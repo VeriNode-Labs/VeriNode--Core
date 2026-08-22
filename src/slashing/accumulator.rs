@@ -18,13 +18,12 @@
 
 extern crate alloc;
 
-use alloc::collections::BTreeMap;
-use alloc::vec::Vec;
 use crate::slashing::types::{
     EpochIndex, GenerationalTag, SlashingAccumulatorState, SlashingRecord, ValidatorIndex,
     WindowOffset, DEFAULT_SLASHING_WINDOW,
 };
-
+use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
 
 /// Internal validator state tracked within the accumulator.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -63,7 +62,11 @@ impl SlashingAccumulator {
 
     /// Create a new SlashingAccumulator with a custom window size.
     pub fn with_window_size(window_size: usize) -> Self {
-        let actual_size = if window_size == 0 { DEFAULT_SLASHING_WINDOW } else { window_size };
+        let actual_size = if window_size == 0 {
+            DEFAULT_SLASHING_WINDOW
+        } else {
+            window_size
+        };
         Self {
             window_size: actual_size,
             validators: BTreeMap::new(),
@@ -178,7 +181,11 @@ impl SlashingAccumulator {
         let expected_gen = self.compute_generation(epoch);
 
         // 1. Compare bit state: must be marked slashed
-        let bit = self.bit_states.get(&validator_index).copied().unwrap_or(false);
+        let bit = self
+            .bit_states
+            .get(&validator_index)
+            .copied()
+            .unwrap_or(false);
         if !bit {
             return false;
         }
@@ -205,7 +212,11 @@ impl SlashingAccumulator {
         validator_index: ValidatorIndex,
         current_epoch: EpochIndex,
     ) -> bool {
-        let bit = self.bit_states.get(&validator_index).copied().unwrap_or(false);
+        let bit = self
+            .bit_states
+            .get(&validator_index)
+            .copied()
+            .unwrap_or(false);
         if !bit {
             return false;
         }
@@ -247,7 +258,10 @@ impl SlashingAccumulator {
 
     /// Retrieve the raw bit state for a validator.
     pub fn get_bit_state(&self, validator_index: ValidatorIndex) -> bool {
-        self.bit_states.get(&validator_index).copied().unwrap_or(false)
+        self.bit_states
+            .get(&validator_index)
+            .copied()
+            .unwrap_or(false)
     }
 
     /// Clear all slashing state for a validator.

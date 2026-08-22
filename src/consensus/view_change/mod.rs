@@ -27,6 +27,6 @@ pub use quarantine::{QuarantineBuffer, QuarantinedQc};
 pub use resolver::{create_conflict_event, QcProcessOutcome, ViewChangeResolver};
 pub use types::{
     compute_public_key_set_hash, AggregateSignature, BlockHash, PublicKey, QcConflictDetected,
-    QuorumCertificate, ViewChangeEvent, ViewChangeError, CONVERGENCE_ROUND_LIMIT, QC,
+    QuorumCertificate, ViewChangeError, ViewChangeEvent, CONVERGENCE_ROUND_LIMIT, QC,
     QUARANTINE_ROUND_LIMIT,
 };

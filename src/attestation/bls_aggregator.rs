@@ -279,8 +279,12 @@ impl BLSBatchVerificationCache {
 
         self.next_seq = self.next_seq.wrapping_add(1);
         let new_seq = self.next_seq;
-        let entry =
-            BLSCacheEntry::new(key.message_root_256, key.aggregator_index, is_valid, new_seq);
+        let entry = BLSCacheEntry::new(
+            key.message_root_256,
+            key.aggregator_index,
+            is_valid,
+            new_seq,
+        );
         self.entries.insert(key, (entry, new_seq));
         self.lru_order.insert((new_seq, key), ());
     }
