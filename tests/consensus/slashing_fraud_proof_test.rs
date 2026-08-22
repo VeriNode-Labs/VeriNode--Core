@@ -174,11 +174,21 @@ fn unavailability_slashing_capped_at_ten_percent() {
             500,
         )
         .expect("valid unavailability evidence must be accepted");
-    assert_eq!(ev_store.get(sub_id).unwrap().offense_type, OffenseType::Unavailability);
+    assert_eq!(
+        ev_store.get(sub_id).unwrap().offense_type,
+        OffenseType::Unavailability
+    );
 
     // Challenge window expires.
     let mut challenge_mgr = ChallengeManager::new();
-    challenge_mgr.open(sub_id, validator, OffenseType::Unavailability, challenger, 500, 0);
+    challenge_mgr.open(
+        sub_id,
+        validator,
+        OffenseType::Unavailability,
+        challenger,
+        500,
+        0,
+    );
     let expired = challenge_mgr.expire_elapsed(CHALLENGE_PERIOD_SECS + 1);
     assert_eq!(expired.len(), 1);
 
@@ -226,7 +236,14 @@ fn invalid_proposal_slashed_two_percent() {
         .expect("valid invalid-proposal evidence must be accepted");
 
     let mut challenge_mgr = ChallengeManager::new();
-    challenge_mgr.open(sub_id, validator, OffenseType::InvalidProposal, pk(97), 200, 0);
+    challenge_mgr.open(
+        sub_id,
+        validator,
+        OffenseType::InvalidProposal,
+        pk(97),
+        200,
+        0,
+    );
     challenge_mgr.expire_elapsed(CHALLENGE_PERIOD_SECS + 1);
 
     let mut registry = StakeRegistry::new();
@@ -262,13 +279,20 @@ fn counter_evidence_wins_challenger_bond_slashed() {
 
     // Open challenge.
     let mut challenge_mgr = ChallengeManager::new();
-    challenge_mgr.open(sub_id, validator, OffenseType::Equivocation, challenger, BOND, NOW);
+    challenge_mgr.open(
+        sub_id,
+        validator,
+        OffenseType::Equivocation,
+        challenger,
+        BOND,
+        NOW,
+    );
 
     // Accused submits valid counter-evidence before deadline.
     // Counter-evidence layout for equivocation: [height:8][block_hash:32] = 40 bytes.
     let mut counter_ev = Vec::with_capacity(40);
     counter_ev.extend_from_slice(&99u64.to_le_bytes()); // same height
-    counter_ev.extend_from_slice(&hash(1));              // valid block hash
+    counter_ev.extend_from_slice(&hash(1)); // valid block hash
 
     let outcome = challenge_mgr
         .submit_counter_evidence(sub_id, counter_ev, NOW + 3600)
@@ -277,7 +301,9 @@ fn counter_evidence_wins_challenger_bond_slashed() {
     // Defender wins and challenger's bond is to be slashed.
     assert_eq!(
         outcome,
-        CounterEvidenceOutcome::DefenderWins { bond_to_slash: BOND }
+        CounterEvidenceOutcome::DefenderWins {
+            bond_to_slash: BOND
+        }
     );
     assert_eq!(
         challenge_mgr.get(sub_id).unwrap().status,

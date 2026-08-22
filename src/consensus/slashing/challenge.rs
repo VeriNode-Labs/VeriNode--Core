@@ -194,7 +194,9 @@ impl ChallengeManager {
         record.status = ChallengeStatus::DefenderWon;
         record.counter_evidence = Some(counter_evidence);
 
-        Ok(CounterEvidenceOutcome::DefenderWins { bond_to_slash: bond })
+        Ok(CounterEvidenceOutcome::DefenderWins {
+            bond_to_slash: bond,
+        })
     }
 
     /// Advance all open challenges whose deadline has passed to
@@ -251,9 +253,8 @@ impl ChallengeManager {
                 if counter_evidence.len() < 40 {
                     return false;
                 }
-                let height_bytes: [u8; 8] = counter_evidence[..8]
-                    .try_into()
-                    .expect("slice is 8 bytes");
+                let height_bytes: [u8; 8] =
+                    counter_evidence[..8].try_into().expect("slice is 8 bytes");
                 let height = u64::from_le_bytes(height_bytes);
                 height > 0
             }
@@ -406,9 +407,7 @@ mod tests {
     fn unavailability_counter_evidence_accepted_with_8_bytes() {
         let mut mgr = ChallengeManager::new();
         mgr.open(0, pk(1), OffenseType::Unavailability, pk(99), 200, 0);
-        let outcome = mgr
-            .submit_counter_evidence(0, vec![0u8; 8], 100)
-            .unwrap();
+        let outcome = mgr.submit_counter_evidence(0, vec![0u8; 8], 100).unwrap();
         assert_eq!(
             outcome,
             CounterEvidenceOutcome::DefenderWins { bond_to_slash: 200 }
@@ -419,9 +418,7 @@ mod tests {
     fn unavailability_counter_evidence_rejected_if_too_short() {
         let mut mgr = ChallengeManager::new();
         mgr.open(0, pk(1), OffenseType::Unavailability, pk(99), 200, 0);
-        let outcome = mgr
-            .submit_counter_evidence(0, vec![0u8; 7], 100)
-            .unwrap();
+        let outcome = mgr.submit_counter_evidence(0, vec![0u8; 7], 100).unwrap();
         assert_eq!(outcome, CounterEvidenceOutcome::Invalid);
     }
 }

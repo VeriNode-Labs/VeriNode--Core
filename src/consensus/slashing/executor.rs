@@ -190,12 +190,10 @@ impl SlashingExecutor {
             return Err(ExecutorError::AlreadySlashed);
         }
 
-        let total_slashed =
-            Self::compute_slash_amount(offense_type, stake, missed_attestations);
+        let total_slashed = Self::compute_slash_amount(offense_type, stake, missed_attestations);
 
         // Split: 50 % burn, 50 % distribute.
-        let burned = (total_slashed as u128)
-            .saturating_mul(BURN_FRACTION_NUMERATOR)
+        let burned = (total_slashed as u128).saturating_mul(BURN_FRACTION_NUMERATOR)
             / BURN_FRACTION_DENOMINATOR;
         let burned = burned as u64;
         let distributed = total_slashed.saturating_sub(burned);
@@ -244,16 +242,14 @@ impl SlashingExecutor {
                     / UNAVAILABILITY_PENALTY_PER_MISS_DENOMINATOR;
 
                 // cap at 10 % of stake
-                let cap = (stake as u128)
-                    .saturating_mul(UNAVAILABILITY_MAX_PENALTY_NUMERATOR)
+                let cap = (stake as u128).saturating_mul(UNAVAILABILITY_MAX_PENALTY_NUMERATOR)
                     / UNAVAILABILITY_MAX_PENALTY_DENOMINATOR;
 
                 raw.min(cap) as u64
             }
 
             OffenseType::InvalidProposal => {
-                let amount = (stake as u128)
-                    .saturating_mul(INVALID_PROPOSAL_PENALTY_NUMERATOR)
+                let amount = (stake as u128).saturating_mul(INVALID_PROPOSAL_PENALTY_NUMERATOR)
                     / INVALID_PROPOSAL_PENALTY_DENOMINATOR;
                 amount as u64
             }
@@ -286,22 +282,16 @@ mod tests {
 
     #[test]
     fn equivocation_slashes_full_stake() {
-        let amount = SlashingExecutor::compute_slash_amount(
-            OffenseType::Equivocation,
-            STAKE_32_ETH,
-            0,
-        );
+        let amount =
+            SlashingExecutor::compute_slash_amount(OffenseType::Equivocation, STAKE_32_ETH, 0);
         assert_eq!(amount, STAKE_32_ETH);
     }
 
     #[test]
     fn unavailability_scales_per_miss() {
         // 100 misses × 0.1 % = 10 % (exactly at cap)
-        let amount = SlashingExecutor::compute_slash_amount(
-            OffenseType::Unavailability,
-            STAKE_32_ETH,
-            100,
-        );
+        let amount =
+            SlashingExecutor::compute_slash_amount(OffenseType::Unavailability, STAKE_32_ETH, 100);
         let expected_cap = STAKE_32_ETH / 10;
         assert_eq!(amount, expected_cap);
     }
@@ -309,11 +299,8 @@ mod tests {
     #[test]
     fn unavailability_below_cap() {
         // 50 misses × 0.1 % = 5 % < 10 % cap
-        let amount = SlashingExecutor::compute_slash_amount(
-            OffenseType::Unavailability,
-            STAKE_32_ETH,
-            50,
-        );
+        let amount =
+            SlashingExecutor::compute_slash_amount(OffenseType::Unavailability, STAKE_32_ETH, 50);
         let expected = STAKE_32_ETH as u128 * 50 / 1_000;
         assert_eq!(amount, expected as u64);
     }
@@ -321,22 +308,16 @@ mod tests {
     #[test]
     fn unavailability_above_100_misses_capped_at_10_percent() {
         // 200 misses would be 20 %, but it's capped at 10 %.
-        let amount = SlashingExecutor::compute_slash_amount(
-            OffenseType::Unavailability,
-            STAKE_32_ETH,
-            200,
-        );
+        let amount =
+            SlashingExecutor::compute_slash_amount(OffenseType::Unavailability, STAKE_32_ETH, 200);
         let cap = STAKE_32_ETH / 10;
         assert_eq!(amount, cap);
     }
 
     #[test]
     fn invalid_proposal_slashes_two_percent() {
-        let amount = SlashingExecutor::compute_slash_amount(
-            OffenseType::InvalidProposal,
-            STAKE_32_ETH,
-            0,
-        );
+        let amount =
+            SlashingExecutor::compute_slash_amount(OffenseType::InvalidProposal, STAKE_32_ETH, 0);
         let expected = STAKE_32_ETH as u128 * 2 / 100;
         assert_eq!(amount, expected as u64);
     }
@@ -357,10 +338,7 @@ mod tests {
         // 50 % distributed
         assert_eq!(result.distributed, STAKE_32_ETH / 2);
         // 3 active validators
-        assert_eq!(
-            result.reward_per_active_validator,
-            (STAKE_32_ETH / 2) / 3
-        );
+        assert_eq!(result.reward_per_active_validator, (STAKE_32_ETH / 2) / 3);
         // Validator stake is zero after equivocation
         assert_eq!(result.remaining_stake, 0);
     }

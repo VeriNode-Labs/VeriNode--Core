@@ -201,10 +201,7 @@ impl EvidenceStore {
     /// ```
     ///
     /// Valid iff `height > 0`.
-    pub fn verify_fraud_proof(
-        offense_type: OffenseType,
-        evidence: &[u8],
-    ) -> VerificationResult {
+    pub fn verify_fraud_proof(offense_type: OffenseType, evidence: &[u8]) -> VerificationResult {
         match offense_type {
             OffenseType::Equivocation => {
                 if evidence.len() < 72 {

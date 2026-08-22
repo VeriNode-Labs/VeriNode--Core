@@ -138,7 +138,8 @@ impl SlashingConditionDetector {
                 return None;
             }
             // Conflicting proposal at same (height, validator) → equivocation.
-            let evidence = Self::encode_proposal_evidence(height, &existing.block_hash, &block_hash);
+            let evidence =
+                Self::encode_proposal_evidence(height, &existing.block_hash, &block_hash);
             let violation = SlashingViolation {
                 validator_id,
                 offense_type: OffenseType::Equivocation,
