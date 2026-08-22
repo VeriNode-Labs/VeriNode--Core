@@ -31,6 +31,10 @@ name = "accumulator_tests"
 path = "tests/slashing/accumulator_tests.rs"
 
 [[test]]
+name = "pruner_burst_test"
+path = "tests/storage/pruner_burst_test.rs"
+
+[[test]]
 name = "griefing_resistance_test"
 path = "tests/slashing/griefing_resistance_test.rs"
 
@@ -74,6 +78,10 @@ path = "tests/capacity_planning_divergence_test.rs"
 [[test]]
 name = "shard_memory_fragmentation_test"
 path = "tests/shard_memory_fragmentation_test.rs"
+
+[[test]]
+name = "view_change_partition_test"
+path = "tests/consensus/view_change_partition_test.rs"
 
 # ── Lint policy ──────────────────────────────────────────────────────────────
 # Enforced via `cargo clippy -- -D warnings` in CI. The lints below are the
