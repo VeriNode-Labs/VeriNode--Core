@@ -122,14 +122,14 @@ mod tests {
         // MAX_SLASHING_WINDOW is 8192
         // earliest_start is 1000. valid_until is 9192.
         assert!(!verify_evidence_expiry(&ev, 9192)); // inclusive boundary is fine
-        assert!(verify_evidence_expiry(&ev, 9193));  // strictly past window is expired
+        assert!(verify_evidence_expiry(&ev, 9193)); // strictly past window is expired
     }
 
     #[test]
     fn test_verify_surround_vote_valid() {
         let ev = SlashingEvidence::new(None, Some(5), Some(10));
         assert_eq!(verify_surround_vote(&ev, 8000), Ok(true));
-        
+
         let expired_ev = SlashingEvidence::new(None, Some(1), Some(2));
         assert_eq!(verify_surround_vote(&expired_ev, 10000), Ok(false));
     }
@@ -137,9 +137,15 @@ mod tests {
     #[test]
     fn test_verify_surround_vote_invalid() {
         let ev_same = SlashingEvidence::new(None, Some(5), Some(5));
-        assert_eq!(verify_surround_vote(&ev_same, 1000), Err("invalid_surround_vote_epochs"));
-        
+        assert_eq!(
+            verify_surround_vote(&ev_same, 1000),
+            Err("invalid_surround_vote_epochs")
+        );
+
         let ev_missing = SlashingEvidence::new(None, Some(5), None);
-        assert_eq!(verify_surround_vote(&ev_missing, 1000), Err("missing_surround_vote_epochs"));
+        assert_eq!(
+            verify_surround_vote(&ev_missing, 1000),
+            Err("missing_surround_vote_epochs")
+        );
     }
 }

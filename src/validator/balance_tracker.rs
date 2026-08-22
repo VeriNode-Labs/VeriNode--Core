@@ -215,7 +215,7 @@ mod tests {
     fn test_register_and_access() {
         let mut tracker = BalanceTracker::new();
         tracker.register_validator(1, 32 * GWEI_PER_ETH);
-        
+
         assert_eq!(tracker.effective_balance(1), Some(32 * GWEI_PER_ETH));
         assert_eq!(tracker.effective_balance(2), None);
         assert_eq!(tracker.outstanding_debt(1), None);
@@ -226,8 +226,11 @@ mod tests {
     fn test_apply_penalty_sufficient_balance() {
         let mut tracker = BalanceTracker::new();
         tracker.register_validator(1, 32 * GWEI_PER_ETH);
-        
-        assert_eq!(tracker.apply_penalty(1, 10 * GWEI_PER_ETH).unwrap(), 22 * GWEI_PER_ETH);
+
+        assert_eq!(
+            tracker.apply_penalty(1, 10 * GWEI_PER_ETH).unwrap(),
+            22 * GWEI_PER_ETH
+        );
         assert_eq!(tracker.effective_balance(1), Some(22 * GWEI_PER_ETH));
         assert!(!tracker.has_debt(1));
     }
@@ -236,10 +239,16 @@ mod tests {
     fn test_apply_penalty_insufficient_balance() {
         let mut tracker = BalanceTracker::new();
         tracker.register_validator(1, 32 * GWEI_PER_ETH);
-        
+
         let result = tracker.apply_penalty(1, 40 * GWEI_PER_ETH);
-        assert_eq!(result, Err(BalanceError::InsufficientBalance { balance: 0, penalty: 40 * GWEI_PER_ETH }));
-        
+        assert_eq!(
+            result,
+            Err(BalanceError::InsufficientBalance {
+                balance: 0,
+                penalty: 40 * GWEI_PER_ETH
+            })
+        );
+
         assert_eq!(tracker.effective_balance(1), Some(0));
         assert_eq!(tracker.outstanding_debt(1), Some(8 * GWEI_PER_ETH));
         assert!(tracker.has_debt(1));
@@ -249,8 +258,11 @@ mod tests {
     fn test_apply_reward() {
         let mut tracker = BalanceTracker::new();
         tracker.register_validator(1, 30 * GWEI_PER_ETH);
-        
-        assert_eq!(tracker.apply_reward(1, 5 * GWEI_PER_ETH).unwrap(), MAX_EFFECTIVE_BALANCE);
+
+        assert_eq!(
+            tracker.apply_reward(1, 5 * GWEI_PER_ETH).unwrap(),
+            MAX_EFFECTIVE_BALANCE
+        );
         assert_eq!(tracker.effective_balance(1), Some(MAX_EFFECTIVE_BALANCE));
     }
 
@@ -259,10 +271,10 @@ mod tests {
         let mut tracker = BalanceTracker::new();
         tracker.register_validator(1, 15 * GWEI_PER_ETH); // Below threshold
         tracker.register_validator(2, 20 * GWEI_PER_ETH); // Safe
-        tracker.register_validator(3, 32 * GWEI_PER_ETH); 
-        
+        tracker.register_validator(3, 32 * GWEI_PER_ETH);
+
         let _ = tracker.apply_penalty(3, 40 * GWEI_PER_ETH); // Gets debt
-        
+
         let mut eligible = tracker.ejection_eligible();
         eligible.sort();
         assert_eq!(eligible, vec![1, 3]);
@@ -274,7 +286,13 @@ mod tests {
     #[test]
     fn test_validator_not_found() {
         let mut tracker = BalanceTracker::new();
-        assert_eq!(tracker.apply_penalty(1, 100), Err(BalanceError::ValidatorNotFound));
-        assert_eq!(tracker.apply_reward(1, 100), Err(BalanceError::ValidatorNotFound));
+        assert_eq!(
+            tracker.apply_penalty(1, 100),
+            Err(BalanceError::ValidatorNotFound)
+        );
+        assert_eq!(
+            tracker.apply_reward(1, 100),
+            Err(BalanceError::ValidatorNotFound)
+        );
     }
 }
