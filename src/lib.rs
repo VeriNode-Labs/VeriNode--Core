@@ -126,6 +126,12 @@ pub mod cross_chain;
 // consecutive sync cycles.
 pub mod pool;
 
+// Memory management primitives for the shard connection-pool (issue #141).
+// Buddy-system allocator that tracks contiguous free regions and coalesces
+// adjacent free blocks to eliminate pathological external fragmentation under
+// high-frequency tenant churn. Dependency-free and pure Rust.
+pub mod mem;
+
 // PostgreSQL connection-pool health probe with adaptive sizing (issue #134).
 // Deterministic, dependency-free primitives for probing connection-pool
 // health, evaluating pool utilisation, and producing adaptive sizing
