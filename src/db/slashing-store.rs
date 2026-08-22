@@ -225,7 +225,7 @@ impl SlashingStore {
             return Err(SlashingStoreError::PayloadTruncated);
         }
 
-        if &bytes[0..8] != &SLASHING_STORE_MAGIC {
+        if bytes[0..8] != SLASHING_STORE_MAGIC {
             return Err(SlashingStoreError::InvalidMagic);
         }
 

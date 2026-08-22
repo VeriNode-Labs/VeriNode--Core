@@ -38,7 +38,7 @@ use alloc::vec::Vec;
 use crate::consensus::leader_election::timeout_leader::TimeoutLeader;
 use crate::consensus::proposal::equivocation_detector::{EquivocationDetector, EquivocationProof};
 use crate::consensus::recovery::fallback_sync::{
-    FallbackSyncEngine, FallbackSyncError, LockedValue, DEADLOCK_VIEW_THRESHOLD,
+    FallbackSyncEngine, FallbackSyncError, LockedValue,
 };
 use crate::consensus::view_change::types::{BlockHash, PublicKey};
 
@@ -59,7 +59,7 @@ pub enum ConsensusEngineEvent {
     /// A Byzantine equivocation was detected; view was immediately advanced.
     EquivocationDetected {
         /// The equivocation proof.
-        proof: EquivocationProof,
+        proof: Box<EquivocationProof>,
         /// View advanced to.
         new_view: u64,
     },
@@ -176,7 +176,7 @@ impl ConsensusEngine {
             let new_view = self.timeout_leader.current_view();
             self.events
                 .push(ConsensusEngineEvent::EquivocationDetected {
-                    proof: proof.clone(),
+                    proof: Box::new(proof.clone()),
                     new_view,
                 });
         } else {
@@ -278,6 +278,7 @@ impl ConsensusEngine {
 mod tests {
     use super::*;
     use crate::consensus::proposal::equivocation_detector::Proposal;
+    use crate::consensus::recovery::fallback_sync::DEADLOCK_VIEW_THRESHOLD;
     use crate::consensus::view_change::types::AggregateSignature;
 
     fn pk(id: u8) -> PublicKey {

@@ -325,10 +325,8 @@ pub fn truncated_prefix_32(root: &[u8; 32]) -> u32 {
 /// Provided for vulnerability regression and collision analysis.
 pub fn xor_fold_32(root: &[u8; 32]) -> u32 {
     let mut folded = 0u32;
-    for chunk in root.chunks_exact(4) {
-        let mut bytes = [0u8; 4];
-        bytes.copy_from_slice(chunk);
-        folded ^= u32::from_le_bytes(bytes);
+    for chunk in root.as_chunks::<4>().0 {
+        folded ^= u32::from_le_bytes(*chunk);
     }
     folded
 }
