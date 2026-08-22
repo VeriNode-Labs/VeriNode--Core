@@ -3,3 +3,5 @@
 pub mod committee_cache;
 
 pub mod migrations;
+
+pub mod cache;
