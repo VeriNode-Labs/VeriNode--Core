@@ -744,8 +744,10 @@ mod tests {
 
     #[test]
     fn queue_capacity_prevents_overflow() {
-        let mut config = SchedulerConfig::default();
-        config.max_queued_jobs = 5;
+        let config = SchedulerConfig {
+            max_queued_jobs: 5,
+            ..Default::default()
+        };
         let mut scheduler = JobScheduler::new(config);
 
         // Fill up to capacity
