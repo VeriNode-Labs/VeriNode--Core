@@ -6,3 +6,5 @@ pub mod dkg;
 pub mod domain;
 pub mod merkle;
 pub mod sha256;
+
+pub use crate::attestation::bls_aggregator::hash_message_to_root;

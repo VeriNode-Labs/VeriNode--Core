@@ -13,3 +13,10 @@ pub mod nonce_generator;
 pub mod proof_of_connectivity;
 pub mod types;
 pub mod verifier;
+
+pub use bls_aggregator::{
+    hash_message_to_root, truncated_prefix_32, verify_batch_items_with_cache,
+    verify_batch_root_with_cache, verify_batch_with_cache, xor_fold_32, BLSBatchItem,
+    BLSBatchVerificationCache, BLSCacheEntry, BLSCacheKey, BLSCacheMetrics,
+    DEFAULT_BLS_CACHE_CAPACITY,
+};
