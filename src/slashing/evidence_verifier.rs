@@ -93,3 +93,59 @@ pub fn verify_surround_vote(
         _ => Err("missing_surround_vote_epochs"),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_evidence_infraction_slot_range_empty() {
+        let ev = SlashingEvidence::new(None, None, None);
+        assert_eq!(evidence_infraction_slot_range(&ev), (0, 0));
+    }
+
+    #[test]
+    fn test_evidence_infraction_slot_range_slot_only() {
+        let ev = SlashingEvidence::new(Some(100), None, None);
+        assert_eq!(evidence_infraction_slot_range(&ev), (100, 100));
+    }
+
+    #[test]
+    fn test_evidence_infraction_slot_range_epoch() {
+        let ev = SlashingEvidence::new(None, Some(10), Some(12));
+        assert_eq!(evidence_infraction_slot_range(&ev), (320, 415)); // 10*32=320, 12*32=384, end=384+31=415
+    }
+
+    #[test]
+    fn test_verify_evidence_expiry() {
+        let ev = SlashingEvidence::new(Some(1000), None, None);
+        // MAX_SLASHING_WINDOW is 8192
+        // earliest_start is 1000. valid_until is 9192.
+        assert!(!verify_evidence_expiry(&ev, 9192)); // inclusive boundary is fine
+        assert!(verify_evidence_expiry(&ev, 9193)); // strictly past window is expired
+    }
+
+    #[test]
+    fn test_verify_surround_vote_valid() {
+        let ev = SlashingEvidence::new(None, Some(5), Some(10));
+        assert_eq!(verify_surround_vote(&ev, 8000), Ok(true));
+
+        let expired_ev = SlashingEvidence::new(None, Some(1), Some(2));
+        assert_eq!(verify_surround_vote(&expired_ev, 10000), Ok(false));
+    }
+
+    #[test]
+    fn test_verify_surround_vote_invalid() {
+        let ev_same = SlashingEvidence::new(None, Some(5), Some(5));
+        assert_eq!(
+            verify_surround_vote(&ev_same, 1000),
+            Err("invalid_surround_vote_epochs")
+        );
+
+        let ev_missing = SlashingEvidence::new(None, Some(5), None);
+        assert_eq!(
+            verify_surround_vote(&ev_missing, 1000),
+            Err("missing_surround_vote_epochs")
+        );
+    }
+}

@@ -257,8 +257,10 @@ mod tests {
 
     #[test]
     fn capacity_evicts_oldest_entry() {
-        let mut config = CacheConfig::default();
-        config.max_entries = 2;
+        let config = CacheConfig {
+            max_entries: 2,
+            ..Default::default()
+        };
         let mut cache = TtlCache::new(config);
 
         cache.insert(1u64, "a", 10, None);

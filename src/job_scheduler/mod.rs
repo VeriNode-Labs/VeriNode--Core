@@ -101,6 +101,8 @@ pub struct SchedulerConfig {
     pub renewal_buffer_secs: u64,
     /// Maximum acquisition retries before dead-lettering.
     pub max_acquisition_attempts: u32,
+    /// Maximum number of jobs the scheduler tracks concurrently.
+    pub max_queued_jobs: usize,
 }
 
 impl Default for SchedulerConfig {
@@ -109,6 +111,7 @@ impl Default for SchedulerConfig {
             lease_ttl_secs: DEFAULT_LEASE_TTL_SECS,
             renewal_buffer_secs: DEFAULT_RENEWAL_BUFFER_SECS,
             max_acquisition_attempts: MAX_ACQUISITION_ATTEMPTS,
+            max_queued_jobs: MAX_QUEUED_JOBS,
         }
     }
 }
@@ -197,9 +200,9 @@ impl JobScheduler {
         max_processing_secs: u64,
         now: TimestampSecs,
     ) -> Result<JobId, SchedulerError> {
-        if self.jobs.len() >= MAX_QUEUED_JOBS {
+        if self.jobs.len() >= self.config.max_queued_jobs {
             return Err(SchedulerError::QueueCapacityExceeded {
-                max: MAX_QUEUED_JOBS,
+                max: self.config.max_queued_jobs,
             });
         }
 
@@ -741,10 +744,14 @@ mod tests {
 
     #[test]
     fn queue_capacity_prevents_overflow() {
-        let mut scheduler = JobScheduler::new(SchedulerConfig::default());
+        let config = SchedulerConfig {
+            max_queued_jobs: 5,
+            ..Default::default()
+        };
+        let mut scheduler = JobScheduler::new(config);
 
         // Fill up to capacity
-        for i in 0..MAX_QUEUED_JOBS {
+        for i in 0..5 {
             scheduler
                 .enqueue("q".into(), 1, vec![i as u8], 60, 1000)
                 .unwrap();
@@ -753,7 +760,7 @@ mod tests {
         let result = scheduler.enqueue("q".into(), 1, vec![0xFF], 60, 1000);
         assert!(matches!(
             result,
-            Err(SchedulerError::QueueCapacityExceeded { max: _ })
+            Err(SchedulerError::QueueCapacityExceeded { max: 5 })
         ));
     }
 

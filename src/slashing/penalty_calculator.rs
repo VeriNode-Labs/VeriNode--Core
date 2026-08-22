@@ -86,3 +86,38 @@ pub fn compute_inactivity_penalty(effective_balance: u64, epochs_since_finality:
 pub fn cap_effective_balance(balance: u64) -> u64 {
     balance.min(MAX_EFFECTIVE_BALANCE)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::validator::balance_tracker::GWEI_PER_ETH;
+
+    #[test]
+    fn test_compute_slashing_penalty() {
+        let max_balance = 32 * GWEI_PER_ETH;
+        let expected_penalty = (max_balance / 32) + (max_balance / 32);
+        assert_eq!(compute_slashing_penalty(max_balance), expected_penalty);
+
+        let zero_balance = 0;
+        assert_eq!(compute_slashing_penalty(zero_balance), 0);
+    }
+
+    #[test]
+    fn test_compute_inactivity_penalty() {
+        let max_balance = 32 * GWEI_PER_ETH;
+        let epochs = 10;
+        let expected = (100 * (max_balance as u128) / (INACTIVITY_PENALTY_QUOTIENT as u128)) as u64;
+        assert_eq!(compute_inactivity_penalty(max_balance, epochs), expected);
+
+        assert_eq!(compute_inactivity_penalty(max_balance, 0), 0);
+    }
+
+    #[test]
+    fn test_cap_effective_balance() {
+        assert_eq!(
+            cap_effective_balance(33 * GWEI_PER_ETH),
+            MAX_EFFECTIVE_BALANCE
+        );
+        assert_eq!(cap_effective_balance(10 * GWEI_PER_ETH), 10 * GWEI_PER_ETH);
+    }
+}
