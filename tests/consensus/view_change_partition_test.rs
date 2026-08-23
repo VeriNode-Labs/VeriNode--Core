@@ -52,12 +52,7 @@ fn test_partition_divergent_qcs_heal_and_converge_by_epoch() {
 
     // Partition B proposes QC_B with epoch 2 (more recent network state in partition B).
     let _ = node_b
-        .create_proposal(
-            9,
-            make_block_hash(99),
-            vec![make_pk(4)],
-            make_sig(99),
-        )
+        .create_proposal(9, make_block_hash(99), vec![make_pk(4)], make_sig(99))
         .expect("dummy proposal to advance epoch");
     let qc_b = node_b
         .create_proposal(
@@ -220,8 +215,12 @@ fn test_partition_multi_node_cluster_simulation() {
 
     // Partition 2 generates QC_P2 for view 50 with a higher epoch.
     // Advance epoch in partition 2 by creating earlier proposals.
-    let _ = cluster[4].create_proposal(48, make_block_hash(1), vec![make_pk(4)], make_sig(1)).unwrap();
-    let _ = cluster[4].create_proposal(49, make_block_hash(2), vec![make_pk(5)], make_sig(2)).unwrap();
+    let _ = cluster[4]
+        .create_proposal(48, make_block_hash(1), vec![make_pk(4)], make_sig(1))
+        .unwrap();
+    let _ = cluster[4]
+        .create_proposal(49, make_block_hash(2), vec![make_pk(5)], make_sig(2))
+        .unwrap();
     let qc_p2 = cluster[4]
         .create_proposal(
             50,

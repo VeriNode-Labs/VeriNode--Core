@@ -69,6 +69,10 @@ path = "tests/consensus/view_change_partition_test.rs"
 name = "byzantine_equivocation_recovery_test"
 path = "tests/consensus/byzantine_equivocation_recovery_test.rs"
 
+[[test]]
+name = "pg_pool_health_probe_test"
+path = "tests/pg_pool_health_probe_test.rs"
+
 # ── Lint policy ──────────────────────────────────────────────────────────────
 # Enforced via `cargo clippy -- -D warnings` in CI. The lints below are the
 # style/pedantic ones we deliberately do not churn on:

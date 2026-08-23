@@ -125,6 +125,22 @@ pub mod cross_chain;
 // conservative estimate when the two models diverge by more than 10% for 3
 // consecutive sync cycles.
 pub mod pool;
+
+// Memory management primitives for the shard connection-pool (issue #141).
+// Buddy-system allocator that tracks contiguous free regions and coalesces
+// adjacent free blocks to eliminate pathological external fragmentation under
+// high-frequency tenant churn. Dependency-free and pure Rust.
+pub mod mem;
+
+// PostgreSQL connection-pool health probe with adaptive sizing (issue #134).
+// Deterministic, dependency-free primitives for probing connection-pool
+// health, evaluating pool utilisation, and producing adaptive sizing
+// decisions. Implements blue-green / canary deployment gates, P99 latency
+// monitoring, consecutive-unhealthy-probe degradation detection, and
+// system-wide dashboard snapshots. All math is pure Rust so on-chain
+// contracts, off-chain monitoring agents, and deployment gates share the
+// same thresholds.
+pub mod pg_pool;
 // --- ERROR CODES ---
 
 #[contracterror]

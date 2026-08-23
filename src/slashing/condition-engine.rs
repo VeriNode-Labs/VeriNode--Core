@@ -5,13 +5,12 @@
 
 extern crate alloc;
 
-use alloc::vec::Vec;
 use crate::slashing::accumulator::SlashingAccumulator;
 use crate::slashing::types::{
     EpochIndex, SlashingError, SlashingRecord, ValidatorIndex, WindowOffset,
     DEFAULT_SLASHING_WINDOW,
 };
-
+use alloc::vec::Vec;
 
 /// Slashing condition engine state snapshot for persistence and migrations.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -91,8 +90,13 @@ impl SlashingConditionEngine {
 
     /// Check if a validator is currently slashed within the historical window.
     #[inline]
-    pub fn is_slashed_in_window(&self, validator_index: ValidatorIndex, current_epoch: EpochIndex) -> bool {
-        self.accumulator.is_slashed_in_window(validator_index, current_epoch)
+    pub fn is_slashed_in_window(
+        &self,
+        validator_index: ValidatorIndex,
+        current_epoch: EpochIndex,
+    ) -> bool {
+        self.accumulator
+            .is_slashed_in_window(validator_index, current_epoch)
     }
 
     /// Process and record a slashing infraction for a validator.
@@ -142,7 +146,8 @@ impl SlashingConditionEngine {
         self.accumulator = SlashingAccumulator::with_window_size(state.window_size as usize);
         self.current_epoch = state.current_epoch;
         for record in state.active_records {
-            self.accumulator.record_slashing(record.validator_index, record.epoch);
+            self.accumulator
+                .record_slashing(record.validator_index, record.epoch);
         }
         self.accumulator.advance_to_epoch(state.current_epoch);
     }

@@ -14,7 +14,7 @@ use core::cmp::Ordering;
 
 use crate::consensus::view_change::quarantine::QuarantineBuffer;
 use crate::consensus::view_change::types::{
-    AggregateSignature, BlockHash, PublicKey, QcConflictDetected, ViewChangeEvent, ViewChangeError,
+    AggregateSignature, BlockHash, PublicKey, QcConflictDetected, ViewChangeError, ViewChangeEvent,
     QC,
 };
 
@@ -88,13 +88,7 @@ impl ViewChangeResolver {
             .checked_add(1)
             .ok_or(ViewChangeError::EpochOverflow)?;
 
-        let qc = QC::new(
-            view,
-            self.current_qc_epoch,
-            block_hash,
-            signers,
-            signature,
-        );
+        let qc = QC::new(view, self.current_qc_epoch, block_hash, signers, signature);
 
         Ok(qc)
     }
