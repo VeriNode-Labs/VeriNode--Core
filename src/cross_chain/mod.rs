@@ -23,6 +23,11 @@
 //! * [`light_client`] — the [`LightClientRegistry`] that ties the above
 //!   together and exports the `chain_finality_lag_ms` gauge
 //!   ([`ChainFinalityMetrics`]) for every connected chain.
+//! * [`ibc`] — IBC packet commitment timeouts derived from each chain's own
+//!   measured block-time distribution rather than an assumed constant
+//!   (issue #138). Its [`BlockTimeEstimator`] is fed by the same header
+//!   pipeline as the rest of this module, from
+//!   [`ConnectedChain::observe_header`].
 //!
 //! All logic is deterministic, integer-only, and dependency-free so it compiles
 //! to WASM (`no_std`) and is shared verbatim by off-chain relayers and
@@ -31,12 +36,27 @@
 pub mod committee_sync;
 pub mod finality_verifier;
 pub mod header_cache;
+pub mod ibc;
 pub mod light_client;
 pub mod types;
 
 pub use committee_sync::{CommitteeSyncState, SyncOutcome};
 pub use finality_verifier::{FinalityDecision, FinalityVerifier};
 pub use header_cache::{HeaderCache, RecentHeader};
+pub use ibc::block_time_estimator::{
+    BlockTimeEstimator, BLOCK_TIME_EMA_ALPHA_BPS, BLOCK_TIME_TAIL_PERCENTILE,
+    BLOCK_TIME_WINDOW_SAMPLES,
+};
+pub use ibc::packet_relayer::{
+    ChannelId, IbcRelayerError, IbcRelayerEvent, InFlightPacket, PacketId, PacketOutcome,
+    PacketRelayer, PacketResolution, TimeoutMiss, MAX_MISESTIMATION_RATE_BPS,
+    MISESTIMATION_WINDOW_PACKETS, TIMEOUT_ACCURACY_TOLERANCE_BPS,
+};
+pub use ibc::packet_timeout::{
+    block_count, compute_timeout, in_cold_start, IbcTimeoutError, TimeoutEstimate,
+    COLD_START_MARGIN_BPS, COLD_START_PACKET_COUNT, MAX_PACKET_LIFETIME_BLOCKS,
+    MAX_TIMEOUT_DELTA_MS, MIN_TIMEOUT_DELTA_MS,
+};
 pub use light_client::{ChainFinalityMetrics, ConnectedChain, LightClientRegistry};
 pub use types::{
     ChainConfig, ChainId, CrossChainError, BPS_DENOMINATOR, FINALITY_THRESHOLD_DENOMINATOR,
