@@ -77,6 +77,10 @@ path = "tests/consensus/slashing_fraud_proof_test.rs"
 name = "pg_pool_health_probe_test"
 path = "tests/pg_pool_health_probe_test.rs"
 
+[[test]]
+name = "relay_endpoint_cache_poisoning_test"
+path = "tests/network/relay_endpoint_cache_poisoning_test.rs"
+
 # ── Lint policy ──────────────────────────────────────────────────────────────
 # Enforced via `cargo clippy -- -D warnings` in CI. The lints below are the
 # style/pedantic ones we deliberately do not churn on:

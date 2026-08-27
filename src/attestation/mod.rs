@@ -3,6 +3,10 @@
 //! Also contains the proof-of-connectivity protocol with epoch-scoped nonces
 //! (issue #54): `types`, `nonce_generator`, `nonce_cache`, and
 //! `proof_of_connectivity`.
+//!
+//! `relay_ticket` (issue #140) applies the same domain-separated signing model
+//! to STUN/TURN relay endpoint claims, so the endpoint cache in
+//! `crate::network::relay` can authenticate *and authorize* every write.
 
 pub mod bitfield;
 pub mod bls_aggregator;
@@ -11,6 +15,8 @@ pub mod key_registry;
 pub mod nonce_cache;
 pub mod nonce_generator;
 pub mod proof_of_connectivity;
+#[path = "relay-ticket.rs"]
+pub mod relay_ticket;
 pub mod types;
 pub mod verifier;
 

@@ -79,13 +79,30 @@ pub type SecretKey = [u8; 32];
 /// A signature over a domain-separated signing root.
 pub type Signature = [u8; 32];
 
-/// Produce a signature over `data` under `domain`.
-pub fn sign_attestation(key: &SecretKey, domain: &Domain, data: &AttestationData) -> Signature {
-    let root = compute_signing_root(domain, data);
+/// Produce a signature over an already-computed signing `root`.
+///
+/// This is the bare MAC construction `SHA-256(key || root)` described above,
+/// factored out of [`sign_attestation`] so other message kinds that compute
+/// their own domain-separated root (e.g. relay endpoint tickets in
+/// [`crate::attestation::relay_ticket`]) sign under exactly the same
+/// primitive instead of re-implementing it.
+pub fn sign_root(key: &SecretKey, root: &Hash256) -> Signature {
     let mut buf = [0u8; 64];
     buf[..32].copy_from_slice(key);
-    buf[32..].copy_from_slice(&root);
+    buf[32..].copy_from_slice(root);
     sha256(&buf)
+}
+
+/// Verify a signature over an already-computed signing `root`.
+///
+/// Recomputes the MAC and compares in constant time via [`ct_eq`].
+pub fn verify_root(key: &SecretKey, root: &Hash256, signature: &Signature) -> bool {
+    ct_eq(&sign_root(key, root), signature)
+}
+
+/// Produce a signature over `data` under `domain`.
+pub fn sign_attestation(key: &SecretKey, domain: &Domain, data: &AttestationData) -> Signature {
+    sign_root(key, &compute_signing_root(domain, data))
 }
 
 /// Verify a single attestation signature under `domain`.
@@ -163,7 +180,10 @@ pub fn verify_attestation(
 }
 
 /// Constant-time comparison of two 32-byte values.
-fn ct_eq(a: &Hash256, b: &Hash256) -> bool {
+///
+/// Public so that every signature-verifying module in the crate compares
+/// digests through one audited comparator rather than keeping its own copy.
+pub fn ct_eq(a: &Hash256, b: &Hash256) -> bool {
     let mut diff = 0u8;
     for i in 0..32 {
         diff |= a[i] ^ b[i];
