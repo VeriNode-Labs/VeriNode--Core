@@ -15,6 +15,7 @@ use alloc::vec::Vec;
 use super::committee_sync::{CommitteeSyncState, SyncOutcome};
 use super::finality_verifier::{FinalityDecision, FinalityVerifier};
 use super::header_cache::{HeaderCache, RecentHeader};
+use super::ibc::block_time_estimator::BlockTimeEstimator;
 use super::types::{
     ChainConfig, ChainId, CrossChainError, MAX_ACCEPTABLE_FINALITY_LAG_MS, MAX_CONNECTED_CHAINS,
 };
@@ -42,6 +43,13 @@ pub struct ConnectedChain {
     pub cache: HeaderCache,
     /// Committee synchronization state.
     pub sync: CommitteeSyncState,
+    /// Rolling block-time estimate for this chain, driving IBC packet timeout
+    /// heights (issue #138).
+    ///
+    /// It lives here, on the chain that already receives every header, so that
+    /// [`crate::cross_chain::ibc`] has no header pipeline of its own to keep in
+    /// step with this one.
+    pub block_time: BlockTimeEstimator,
     last_finalized_height: Option<u64>,
 }
 
@@ -49,16 +57,29 @@ impl ConnectedChain {
     /// Connects a chain as of `now_ms`.
     pub fn new(config: ChainConfig, now_ms: u64) -> Self {
         let sync = CommitteeSyncState::new(config.chain_id.clone(), now_ms);
+        let block_time = BlockTimeEstimator::new(config.chain_id.clone());
         Self {
             config,
             cache: HeaderCache::new(),
             sync,
+            block_time,
             last_finalized_height: None,
         }
     }
 
     /// Records a header observed from the chain (after relay latency).
+    ///
+    /// The header also feeds this chain's [`BlockTimeEstimator`]: the interval
+    /// between consecutive block timestamps is exactly the block-time sample
+    /// the IBC packet-timeout estimator needs, and this is already the one
+    /// place every header arrives. See
+    /// [`BlockTimeEstimator::observe_header`] for the sampling rule (only
+    /// consecutive heights with strictly increasing timestamps produce a
+    /// sample, so re-observed headers and height gaps cannot distort the
+    /// distribution).
     pub fn observe_header(&mut self, header: RecentHeader) {
+        self.block_time
+            .observe_header(header.height, header.timestamp_ms);
         self.cache.insert(header);
     }
 
