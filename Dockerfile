@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # Pinned official Rust Debian bookworm image for reproducible layer caching
-ARG RUST_IMAGE=rust:1.80-slim-bookworm
+ARG RUST_IMAGE=rust:slim-bookworm
 ARG RUNTIME_IMAGE=debian:bookworm-slim
 
 # Stage 1: Base builder environment with system build dependencies
