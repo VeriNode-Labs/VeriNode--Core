@@ -141,6 +141,13 @@ pub mod mem;
 // contracts, off-chain monitoring agents, and deployment gates share the
 // same thresholds.
 pub mod pg_pool;
+
+// Automated performance regression detection in CI pipeline (issue #133).
+// Deterministic, dependency-free primitives for tracking critical-path P99
+// latency (< 100ms SLA), evaluating baseline performance drift, detecting
+// statistical regressions in CI, and enforcing blue-green / canary deployment
+// gates with availability (99.99%) and security sign-off verification.
+pub mod perf_regression;
 // --- ERROR CODES ---
 
 #[contracterror]

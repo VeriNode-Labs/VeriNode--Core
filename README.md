@@ -22,8 +22,9 @@ cargo test
   voting, and quadratic governance.
 - Validator, attestation, crypto, slashing, settlement, reputation, mempool,
   backup, webhook, and operational support modules.
-- CI support for Rust tests, coverage, dependency scanning, and storage-layout
-  validation.
+- CI support for Rust tests, coverage, dependency scanning, storage-layout
+  validation, and automated performance regression detection with canary gates
+  (see [docs/performance-regression-detection.md](docs/performance-regression-detection.md)).
 
 ## Contributing
 
