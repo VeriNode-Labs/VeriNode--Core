@@ -341,6 +341,7 @@ functions that are not exported from a module remain implementation details.
 | `SecretRotationService`, `Credential`, `CredentialBinding`, `RotationConfig`, `RotationMetrics`, `RotationError`, credential aliases and constants | Credential rotation with grace windows and active-version bounds. |
 | `PartitionLag`, `ConsumerGroupState`, `ConsumerLagMonitor`, `ConsumerAutoScaler`, `ConsumerGroupRegistry`, `LagAlertLevel`, `ScalingDecision`, `ConsumerCanaryAnalysis`, `ScalingConfig`, `ConsumerLagMetrics`, `LagEvaluation`, `ConsumerLagError`, Kafka aliases and constants | Consumer-lag monitoring and scaling policy evaluation. |
 | `WebhookPayload`, `DeliveryRecord`, `DeliveryEngine`, `DeliveryStatus`, `compute_backoff`, webhook retry constants | Webhook delivery and retry accounting. |
+| `CapacityPlanningRegistry`, `ServiceCapacityState`, `HistoricalUsageBuffer`, `UsageSample`, `ResourceMetrics`, `TrendProjection`, `CapacityHealthState`, `CapacityAction`, `CapacityCanaryAnalysis`, `CapacityForecaster`, `CapacityPlanningConfig`, `ServiceCapacityReport`, `SystemCapacitySnapshot`, `CapacityError`, capacity constants | System-wide capacity planning, multi-dimensional usage trending, linear and Holt-Winters forecasting, capacity runway projection, automated sizing, and blue-green canary gates enforcing 99.99% availability and P99 < 100 ms targets (issue #127). |
 
 ## Operational Guides
 
@@ -395,6 +396,26 @@ approvals before execution.
 canary analysis, and DR test reports. Failover should require at least two
 healthy regions when `MIN_HEALTHY_REGIONS_FOR_DR` is enforced.
 
+### Capacity Planning And Historical Usage Trending
+
+`capacity_planning` provides deterministic, system-wide resource tracking,
+linear regression, Holt-Winters trend forecasting, capacity runway estimation,
+automated sizing recommendations, and blue-green canary gates across all services.
+
+Key operational principles:
+* **Multi-Dimensional Bottleneck Identification**: Tracks CPU, memory, IOPS,
+  network, and worker thread saturation. Peak saturation governs health.
+* **Runway Projection**: Computes remaining seconds to warning (80%), critical
+  (90%), and exhaustion (100%) thresholds. Infinite runway (`None`) is reported
+  when trend is non-increasing.
+* **Automated Sizing with Cooldown**: Provisions scale-up/down actions to maintain
+  20% target headroom, bounded by `min_units` (1) and `max_units` (256). Cooldown
+  is enforced at 30 seconds (`DEFAULT_REACTION_COOLDOWN_SECS = 30`).
+* **Canary Deployment Release Gate**: Mandatory security review sign-off
+  (`security_review_passed == true`), 99.99% availability (`AVAILABILITY_TARGET_BPS = 9_999`),
+  critical-path P99 latency < 100 ms (`CRITICAL_PATH_P99_MS = 100`), and 99.99%
+  request success rate (`CANARY_SUCCESS_TARGET_BPS = 9_999`).
+
 ## Testing And CI
 
 Expected local checks:
@@ -432,6 +453,7 @@ Named tests in `Cargo.toml` include:
 | `backup_verification_test` | `tests/backup_verification_test.rs` |
 | `webhook_delivery_test` | `tests/webhook_delivery_test.rs` |
 | `kafka_consumer_lag_test` | `tests/kafka_consumer_lag_test.rs` |
+| `capacity_planning_usage_trending_test` | `tests/capacity_planning_usage_trending_test.rs` |
 
 ## Troubleshooting
 

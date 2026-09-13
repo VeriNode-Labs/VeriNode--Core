@@ -141,6 +141,14 @@ pub mod mem;
 // contracts, off-chain monitoring agents, and deployment gates share the
 // same thresholds.
 pub mod pg_pool;
+
+// Capacity planning with historical usage trending (issue #127).
+// Deterministic primitives for multi-dimensional resource tracking (CPU, memory,
+// IOPS, network, worker saturation), linear regression and Holt-Winters trend
+// forecasting, capacity runway estimation, automated sizing recommendations,
+// and blue-green / canary release gates enforcing 99.99% availability and
+// P99 < 100 ms critical-path latency targets.
+pub mod capacity_planning;
 // --- ERROR CODES ---
 
 #[contracterror]
