@@ -1,0 +1,23 @@
+[package]
+name = "lumina-contracts"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = { version = "22.0.0" }
+
+[dev-dependencies]
+soroban-sdk = { version = "22.0.0", features = ["testutils"] }
+# Pin ed25519-dalek to 2.x (matching soroban-env-host's testutils) so the
+# `>=2.0.0` semver range cannot resolve to the incompatible 3.x line.
+ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["rand_core"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
