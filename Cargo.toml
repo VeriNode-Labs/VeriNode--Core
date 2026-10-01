@@ -1,0 +1,21 @@
+[package]
+name = "verinode-contracts"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = { version = "22" }
+
+[dev-dependencies]
+soroban-sdk = { version = "22", features = ["testutils"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+overflow-checks = true
